@@ -236,11 +236,6 @@
     });
     if (el.qrBtn) el.qrBtn.addEventListener('click', showQr);
 
-    var demo = $('#demoBtn');
-    if (demo) demo.addEventListener('click', function () {
-      api('/api/demo-mail', { method: 'POST', body: JSON.stringify({ address: state.address }) }).then(function () { setTimeout(poll, 200); });
-    });
-
     if (el.list) {
       el.list.addEventListener('click', function (e) { var it = e.target.closest('.mail-item'); if (it) openMessage(it.dataset.id); });
       el.list.addEventListener('keydown', function (e) { if (e.key === 'Enter') { var it = e.target.closest('.mail-item'); if (it) openMessage(it.dataset.id); } });

@@ -1,75 +1,78 @@
-# TempMailGo — Free Disposable Temporary Email
+# TempMailGo — Free Disposable Temporary Email (powered by mail.tm)
 
-A complete, deployable temp-mail (disposable email) service: an instant, no-signup
-inbox that receives **real** emails and OTP codes, plus a full SEO- and AdSense-ready
-content site (blog, About, How It Works, FAQ, Privacy, Terms, Contact).
+An instant, no-signup temporary inbox that receives **real** emails and OTP codes,
+plus a full SEO- and AdSense-ready content site (blog, About, How It Works, FAQ,
+Privacy, Terms, Contact).
 
-Built with vanilla JS + a Node/Express backend — no framework lock-in, no build
-step for the frontend beyond a static HTML generator.
-
----
-
-## ⚠️ Read this first: what only YOU can set up
-
-A live temp-mail service **cannot be pure front-end code.** To actually *receive*
-real email you need three things that are outside the code and specific to you:
-
-### 1. Domain(s) you own
-Buy the domains you want to offer in the UI (Namecheap, Cloudflare, Porkbun, etc.).
-The list currently in `src/server.js` (`DOMAINS`) is **placeholder** — replace it
-with domains you actually control. Offer a variety: `.com`, `.net`, `.org`, `.xyz`,
-`.online`, `.dev`, etc.
-
-> You **cannot** offer `@gmail.com`, `@yahoo.com`, or `@outlook.com` — those are owned
-> by Google/Yahoo/Microsoft and can't be spoofed. Real `.edu` addresses also can't be
-> issued by you. Use your own custom domains only.
-
-### 2. DNS / MX records
-For each domain, add **MX records** pointing at your inbound email provider, so the
-internet knows to route mail for that domain to them. (Your provider gives you the
-exact records.) This is the single step that makes real delivery possible.
-
-### 3. An inbound email provider (pick ONE)
-Something that receives mail at your domains and **POSTs the parsed message to your
-webhook** at `POST /api/inbound`:
-
-| Option | Good for | Notes |
-|---|---|---|
-| **Mailgun** (Routes / Inbound) | Easiest managed option | Create a Route `catch_all()` → *forward* to `https://YOURDOMAIN/api/inbound`. Posts multipart form fields — already supported. |
-| **ImprovMX** | Cheap/simple forwarding | Webhook add-on posts parsed mail — supported. |
-| **SendGrid Inbound Parse** | High volume | Point the Parse webhook at `/api/inbound`. |
-| **Self-hosted Postfix + parser** | Full control / no third party | Configure catch-all, pipe mail to a script that POSTs JSON to `/api/inbound`. |
-| **Cloudflare Email Routing → Worker** | Free tier | Worker forwards JSON to `/api/inbound`. |
-
-The webhook in `src/server.js` already understands **Mailgun/ImprovMX/SendGrid
-form-field shapes AND a normalized JSON body**, so most providers work with zero code
-changes. Set `INBOUND_SECRET` and pass it as the `x-webhook-secret` header (or
-`?secret=`) to authenticate the webhook.
-
-Until you complete steps 1–3, the app runs perfectly but only the **"Send test email"**
-button (demo endpoint) puts mail in the inbox. Everything else — UI, SEO, content — is
-fully live.
+Mail delivery is powered by the free **[mail.tm](https://docs.mail.tm) public API** —
+so you do **not** need to own any domains, configure MX records, or run a mail
+server. mail.tm owns the domains and the mail infrastructure; TempMailGo calls
+their REST API on the user's behalf.
 
 ---
 
-## What's already built for you (no external setup needed)
+## How the mail engine works now
 
-- ✅ Instant random address on load, "New address", custom username, 10+ domain picker
-- ✅ Real-time inbox via 5-second polling (swap for WebSockets if you like)
-- ✅ Full message view: HTML (sandboxed iframe) + plain text + attachments + sender/subject/time
-- ✅ Automatic **OTP / verification-code detection** and highlighting
-- ✅ Copy-to-clipboard, auto-expiry countdown, **extend** and **save via QR/restore-link**
-- ✅ Collision-checked "never used before" address generation (crypto RNG)
-- ✅ In-memory TTL store (drop-in replaceable with Redis — see below)
-- ✅ Dark / light mode toggle (respects system preference, persists)
-- ✅ Fully responsive, mobile-first, fast (system font + async webfont, lazy images)
-- ✅ **SEO**: unique titles/descriptions, canonical URLs, OG + Twitter cards,
-  Schema.org (WebApplication, FAQPage, BlogPosting, BreadcrumbList, Organization),
-  semantic HTML5, `sitemap.xml`, `robots.txt`, alt text everywhere
-- ✅ **AdSense-ready**: About, How It Works, FAQ, Privacy Policy, Terms, Contact,
-  and **9 substantial blog articles**; clearly separated ad zones (header, sidebar,
-  in-content, footer) that never overlap the app UI
-- ✅ Trust signals + no-log privacy messaging
+```
+Browser ──> TempMailGo backend (Express) ──> mail.tm public API
+  (address only)      (holds bearer token)     (real inboxes + real mail)
+```
+
+1. **GET /api/domains** → proxies mail.tm `GET /domains` (the dropdown shows
+   whatever domains mail.tm currently has active).
+2. **POST /api/generate** → creates a real mail.tm account (`POST /accounts` with
+   a random address + server-generated random password), then gets a bearer token
+   (`POST /token`). The token is cached server-side (keyed by address) and also
+   returned to the browser.
+3. **GET /api/inbox?address=** → calls mail.tm `GET /messages` with the stored
+   token and returns the list in the exact JSON shape the frontend already expects.
+4. **GET /api/message?address=&id=** → calls mail.tm `GET /messages/{id}` for the
+   full HTML/text/attachments.
+5. The old `/api/inbound` webhook and the in-memory `MailStore` were **removed** —
+   mail.tm receives and stores all mail.
+
+The OTP-highlighting, copy-to-clipboard, countdown timer, and QR/save modal all
+work unchanged — only the data source behind them changed. `public/js/app.js` was
+**not** modified for the inbox data flow.
+
+### The "Send test email" button was removed
+With a real API, we can't inject fake mail into a real mail.tm inbox, so the demo
+button no longer makes sense and was removed. To test a live inbox, generate an
+address and send it a real email from any account (or use a site's "verify your
+email" flow).
+
+---
+
+## ⚠️ Important things to know about relying on mail.tm
+
+**Do you need an API key or signup?**
+No. mail.tm is completely free, anonymous, no API key, no signup, no paid tiers.
+
+**Rate limits / reliability for a public site with real traffic:**
+- mail.tm enforces **8 queries per second (QPS) per IP address**. Because your
+  backend calls mail.tm from **one server IP**, that 8 QPS is **shared across all
+  your visitors**. `src/mailtm.js` funnels every outgoing call through a single
+  global throttle (spacing ~160 ms ≈ 6 req/s, under the cap) and honors `429
+  Retry-After` with backoff.
+- **This is the main scaling limit.** Each user polling every 5s uses ~0.2 req/s,
+  so a handful of concurrent users is fine, but hundreds of simultaneous pollers
+  will exceed 8 QPS and start seeing delays/429s. Mitigations if you grow:
+  increase the client poll interval, add short-TTL caching of inbox results, or
+  (best) run behind multiple egress IPs / a proxy pool. mail.tm is a free
+  community service with **no uptime SLA**, so treat availability as best-effort.
+- mail.tm **Terms of Use**: no illegal activity, **no reselling** it as a paid
+  product, **no proxying/mirroring** the API under another domain, and
+  **attribution is required** — we link to mail.tm in the footer. Keep that link.
+
+**Session persistence — do you need a database?**
+No. The design is **stateless**: the mail.tm bearer token is the source of truth
+and is returned to the browser (stored in `localStorage` and embedded in the
+save/QR restore link). The server keeps a small **in-memory** token cache purely
+for convenience; if the server restarts or you run multiple instances, existing
+users keep working as long as their token is valid. When a user's session ends
+they simply stop polling; mail.tm expires idle accounts on its own. If you ever
+want durable sessions across restarts, swap the in-memory `sessions` Map in
+`server.js` for Redis — but it is not required.
 
 ---
 
@@ -85,16 +88,26 @@ npm start         # serves on http://localhost:3000
 Docker:
 ```bash
 docker build -t tempmailgo .
-docker run -p 3000:3000 --env-file .env tempmailgo
+docker run -p 3000:3000 tempmailgo
 ```
+
+### Deploy on Render
+- **Build command:** `npm install && npm run build`
+- **Start command:** `npm start`
+- Render injects `PORT` automatically; `server.js` already reads `process.env.PORT`.
+- No environment variables are required. (Optional: `MAILTM_MIN_SPACING_MS` to tune
+  the throttle, `MAILTM_BASE` to point at a mirror.)
+
+A `render.yaml` blueprint is included for one-click Blueprint deploys.
 
 ## Project structure
 
 ```
 tempmailgo/
 ├─ src/
-│  ├─ server.js      # Express app: static hosting + REST API + /api/inbound webhook
-│  └─ store.js       # TTL mailbox store (swap for Redis in prod) + OTP extraction
+│  ├─ server.js      # Express app: static hosting + REST API (mail.tm-backed)
+│  ├─ mailtm.js      # throttled mail.tm API client (native fetch, 8 QPS-safe)
+│  └─ store.js       # stateless helpers only (HTML strip + OTP detection)
 ├─ generator/
 │  ├─ layout.js      # shared <head>/header/footer + SEO meta
 │  ├─ blog-data.js   # blog article content
@@ -102,44 +115,27 @@ tempmailgo/
 ├─ public/           # generated site + assets + css/js (served statically)
 │  ├─ css/style.css  ├─ js/app.js (inbox app)  ├─ js/common.js (theme/nav)
 │  └─ assets/ , blog/img/
-├─ Dockerfile , .env.example , package.json
+├─ Dockerfile , render.yaml , .env.example , package.json
 ```
 
 ## API reference
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/api/domains` | List available domains |
-| POST | `/api/generate` | Create a new address `{domain?, username?}` |
-| GET | `/api/inbox?address=` | Poll inbox (list) |
+| GET | `/api/domains` | Active domains from mail.tm |
+| POST | `/api/generate` | Create a mail.tm inbox `{domain?, username?}` → `{address, token, ...}` |
+| GET | `/api/inbox?address=` | Poll inbox (uses cached token) |
 | GET | `/api/message?address=&id=` | Full message |
-| DELETE | `/api/message?address=&id=` | Delete a message |
-| POST | `/api/extend` | Extend mailbox TTL `{address}` |
-| POST | `/api/restore` | Restore saved mailbox `{address, token}` |
+| DELETE | `/api/message?id=` | Delete a message (best-effort) |
+| POST | `/api/extend` | Push the soft UI expiry forward |
+| POST | `/api/restore` | Re-accept a saved `{address, token}` |
 | GET | `/api/qr?data=` | SVG QR code (save/restore) |
-| **POST** | **`/api/inbound`** | **Inbound webhook — point your provider here** |
-| POST | `/api/demo-mail` | Inject a sample email (remove/disable in prod) |
-| GET | `/api/health` | Health + stats |
-
-## Going to production
-
-1. **Replace `DOMAINS`** in `src/server.js` with your real domains.
-2. Point MX records at your inbound provider; set the provider's webhook to
-   `POST https://yourdomain.com/api/inbound` with `x-webhook-secret: <INBOUND_SECRET>`.
-3. **Swap the store for Redis** so multiple instances share state and TTLs are native:
-   `store.js` methods map 1:1 to Redis (`SET key val EX ttl`, `LPUSH`, `LRANGE`).
-4. **Disable/remove `/api/demo-mail`** and the "Send test email" button.
-5. Put it behind HTTPS (Caddy/Nginx/your host's TLS).
-6. **AdSense:** apply only once the site is live with real content. Then uncomment the
-   AdSense `<script>` in `generator/layout.js` (replace `ca-pub-XXXX`), rebuild, and place
-   `<ins class="adsbygoogle">` units inside the existing `.ad-zone` containers.
-7. Update the `SITE` constant in `generator/layout.js` and `generator/build.js` to your real
-   canonical domain, then rebuild so canonical/OG/sitemap URLs are correct.
+| GET | `/api/health` | Health + provider + domain count |
 
 ## Notes on legality & AdSense compliance
 
-- The site contains only original, substantive content and clearly labels all ad zones.
+- Only original, substantive content; all ad zones are clearly labeled and separated
+  from the functional inbox.
 - Privacy Policy discloses data handling and third-party ad cookies (required for AdSense).
-- The product explicitly warns against misuse (banking, fraud) in Terms, FAQ, and footer.
-- Do not place ads inside the functional inbox/message area — the provided `.ad-zone`
-  slots are already separated from the app UI.
+- Terms/FAQ warn against misuse (banking, fraud).
+- mail.tm attribution link is in the footer per their Terms — do not remove it.
