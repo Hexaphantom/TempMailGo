@@ -1,0 +1,16 @@
+# Render Blueprint for TempMailGo (optional — you can also configure manually).
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: tempmailgo
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Shared secret to authenticate your inbound-email webhook (set your own value).
+      - key: INBOUND_SECRET
+        sync: false
+    # Render provides PORT automatically; server.js already reads process.env.PORT.

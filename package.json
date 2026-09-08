@@ -1,0 +1,21 @@
+{
+  "name": "tempmailgo",
+  "version": "1.0.0",
+  "main": "src/server.js",
+  "scripts": {
+    "build": "node generator/build.js",
+    "start": "node src/server.js",
+    "dev": "node generator/build.js && node src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Free disposable temporary email service (temp mail) with a real inbound-mail backend and SEO-ready SPA.",
+  "dependencies": {
+    "express": "^5.2.1",
+    "qrcode": "^1.5.4"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

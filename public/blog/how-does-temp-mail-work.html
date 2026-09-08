@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Does Temp Mail Work? The Tech Behind Disposable Email | TempMailGo</title>
+<meta name="description" content="How does temp mail work under the hood? Learn how MX records, mail servers, and real-time inboxes deliver disposable email and OTP codes.">
+<link rel="canonical" href="https://www.tempmailgo.com/blog/how-does-temp-mail-work">
+<meta name="theme-color" content="#4c6fe6">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="keywords" content="how does temp mail work, how temp mail works, temp mail API, real-time inbox email, MX records">
+<meta name="author" content="TempMailGo">
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="TempMailGo">
+<meta property="og:title" content="How Does Temp Mail Work? The Tech Behind Disposable Email | TempMailGo">
+<meta property="og:description" content="How does temp mail work under the hood? Learn how MX records, mail servers, and real-time inboxes deliver disposable email and OTP codes.">
+<meta property="og:url" content="https://www.tempmailgo.com/blog/how-does-temp-mail-work">
+<meta property="og:image" content="https://www.tempmailgo.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How Does Temp Mail Work? The Tech Behind Disposable Email | TempMailGo">
+<meta name="twitter:description" content="How does temp mail work under the hood? Learn how MX records, mail servers, and real-time inboxes deliver disposable email and OTP codes.">
+<meta name="twitter:image" content="https://www.tempmailgo.com/assets/og-image.png">
+<link rel="icon" type="image/png" href="/assets/logo.png">
+<link rel="apple-touch-icon" href="/assets/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="sitemap" type="application/xml" href="/sitemap.xml">
+<!-- Google AdSense (replace ca-pub-XXXX with your publisher ID after approval) -->
+<!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"TempMailGo","url":"https://www.tempmailgo.com","logo":"https://www.tempmailgo.com/assets/logo.png","sameAs":[],"description":"Free disposable temporary email service that receives real messages and OTP codes with no signup."}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.tempmailgo.com/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.tempmailgo.com/blog"},{"@type":"ListItem","position":3,"name":"How Does Temp Mail Work? The Technology Behind Disposable Email","item":"https://www.tempmailgo.com/blog/how-does-temp-mail-work"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"How Does Temp Mail Work? The Technology Behind Disposable Email","description":"How does temp mail work under the hood? Learn how MX records, mail servers, and real-time inboxes deliver disposable email and OTP codes.","image":"https://www.tempmailgo.com/blog/img/how-temp-mail-works.png","datePublished":"2026-08-20","dateModified":"2026-08-20","author":{"@type":"Organization","name":"TempMailGo"},"publisher":{"@context":"https://schema.org","@type":"Organization","name":"TempMailGo","url":"https://www.tempmailgo.com","logo":"https://www.tempmailgo.com/assets/logo.png","sameAs":[],"description":"Free disposable temporary email service that receives real messages and OTP codes with no signup."},"mainEntityOfPage":{"@type":"WebPage","@id":"https://www.tempmailgo.com/blog/how-does-temp-mail-work"}}</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav">
+    <a class="brand" href="/"><img class="brand-logo" src="/assets/logo.png" alt="TempMailGo logo — disposable temporary email service" width="112" height="60"><span>Temp<b>Mail</b>Go</span></a>
+    <nav class="nav-links" id="navLinks" aria-label="Primary"><a href="/">Inbox</a><a href="/how-it-works">How It Works</a><a href="/blog" class="active">Blog</a><a href="/about">About</a><a href="/faq">FAQ</a><a href="/contact">Contact</a></nav>
+    <div class="nav-tools">
+      <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode"><span class="ti">🌙</span></button>
+      <button class="nav-toggle" data-nav-toggle aria-label="Open menu">☰</button>
+    </div>
+  </div>
+</header>
+<main class="page">
+  <div class="container">
+    <aside class="ad-zone ad-leaderboard" aria-label="Advertisement"><span class="ad-label">Advertisement · Header 728×90</span></aside>
+    <div class="page-layout">
+      <article class="prose">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/">Home</a> › <a href="/blog">Blog</a> › How it works</nav>
+        <div class="eyebrow">How it works</div>
+        <h1>How Does Temp Mail Work? The Technology Behind Disposable Email</h1>
+        <div class="article-meta"><span>August 20, 2026</span><span>·</span><span>8 min read</span></div>
+        <div class="article-hero"><img src="/blog/img/how-temp-mail-works.png" alt="How Does Temp Mail Work? The Technology Behind Disposable Email" width="1200" height="514"></div>
+        
+<p>Temp mail feels like magic: an address appears, you paste it somewhere, and seconds later a verification code shows up — no account, no setup. But behind that simplicity is real email infrastructure. Here’s exactly <strong>how temp mail works</strong>, step by step.</p>
+
+<h2>1. A domain with MX records</h2>
+<p>Every email address ends in a domain (the part after the <code>@</code>). For a domain to receive mail, it needs <strong>MX (Mail Exchange) records</strong> in its DNS that tell the internet, “send mail for this domain to this server.” A temp mail provider owns one or more domains and points their MX records at a mail server it controls. This is the single most important ingredient — and the reason a temp mail service can never be pure front-end code.</p>
+
+<h2>2. A mail server that accepts everything</h2>
+<p>Normal mail servers reject messages sent to addresses that don’t exist. A temp mail server does the opposite: it uses a <em>catch-all</em> configuration that accepts mail for <strong>any</strong> username at its domains. That’s why you can invent <code>anything@thedomain.com</code> and it will still receive mail.</p>
+
+<h2>3. Parsing and storing the message</h2>
+<p>When an email arrives, the server (or an inbound email API like Mailgun Routes, ImprovMX, or SendGrid Inbound Parse) parses it into structured data — sender, subject, plain-text body, HTML body, and attachments — and hands it to the application via a webhook. The app stores it in a fast, temporary store (often Redis with a TTL, or an in-memory store) keyed to the recipient address.</p>
+
+<div class="callout"><strong>Why temporary storage?</strong> Because the whole point is that messages expire. A time-to-live (TTL) ensures both the inbox and its contents are deleted automatically after a set window — no manual cleanup, no long-term data retention.</div>
+
+<h2>4. The live inbox in your browser</h2>
+<p>Your browser doesn’t talk to the mail server directly. Instead the front-end app repeatedly asks the back-end, “any new mail for my address?” — either by <strong>polling</strong> every few seconds or over a <strong>WebSocket</strong> for instant push. When a new message is found, it appears in your inbox list without a page reload. TempMailGo polls every 5 seconds and highlights detected OTP codes automatically.</p>
+
+<h2>5. Expiry and clean-up</h2>
+<p>A background job (or the TTL itself) deletes expired mailboxes. Once your inbox timer hits zero, the address and every message tied to it are gone for good. That’s the “self-destructing” behavior that makes disposable email disposable.</p>
+
+<h2>Putting it together</h2>
+<table>
+  <tr><th>Stage</th><th>What happens</th></tr>
+  <tr><td>DNS / MX</td><td>Domain routes all incoming mail to the provider’s server</td></tr>
+  <tr><td>Catch-all server</td><td>Accepts mail for any username</td></tr>
+  <tr><td>Inbound webhook</td><td>Parses mail into JSON and posts it to the app</td></tr>
+  <tr><td>Temporary store</td><td>Holds messages with a TTL, keyed by address</td></tr>
+  <tr><td>Front-end</td><td>Polls/pushes new mail into your live inbox</td></tr>
+  <tr><td>Expiry job</td><td>Deletes the mailbox and its contents</td></tr>
+</table>
+
+<p>Want to know whether this setup is private and secure enough for your use case? Read <a href="/blog/is-temp-mail-safe">Is Temp Mail Safe?</a> next, or see how one-time codes flow through the system in <a href="/blog/how-otp-verification-works">How OTP Verification Works with Temporary Email</a>.</p>
+
+        <aside class="ad-zone ad-inline" aria-label="Advertisement"><span class="ad-label">Advertisement · In-content responsive</span></aside>
+        <div class="callout" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <div><strong>Try TempMailGo free</strong> — a live disposable inbox in one click.</div>
+          <a class="btn btn-primary" href="/">Get a temp email</a>
+        </div>
+        <h2>Related articles</h2>
+        <div class="blog-grid"><a class="blog-card" href="/blog/what-is-temp-mail"><div class="blog-thumb"><img src="/blog/img/how-temp-mail-works.png" alt="What Is Temp Mail? A Complete Beginner’s Guide (2026)" loading="lazy" width="600" height="338"></div><div class="blog-card-body"><div class="blog-tag">Basics</div><h3>What Is Temp Mail? A Complete Beginner’s Guide (2026)</h3></div></a><a class="blog-card" href="/blog/is-temp-mail-safe"><div class="blog-thumb"><img src="/blog/img/is-temp-mail-safe.png" alt="Is Temp Mail Safe? Everything You Need to Know" loading="lazy" width="600" height="338"></div><div class="blog-card-body"><div class="blog-tag">Security</div><h3>Is Temp Mail Safe? Everything You Need to Know</h3></div></a><a class="blog-card" href="/blog/temp-mail-vs-guerrilla-mail"><div class="blog-thumb"><img src="/blog/img/temp-mail-vs-guerrilla.png" alt="Temp Mail vs Guerrilla Mail vs Mailinator: Which Is Best?" loading="lazy" width="600" height="338"></div><div class="blog-card-body"><div class="blog-tag">Comparison</div><h3>Temp Mail vs Guerrilla Mail vs Mailinator: Which Is Best?</h3></div></a></div>
+      </article>
+      <aside><aside class="ad-zone ad-sidebar" aria-label="Advertisement"><span class="ad-label">Advertisement · Sidebar 300×600</span></aside></aside>
+    </div>
+    <aside class="ad-zone ad-footer" aria-label="Advertisement"><span class="ad-label">Advertisement · Footer 728×90</span></aside>
+  </div>
+</main>
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="/"><img class="brand-logo" src="/assets/logo.png" alt="TempMailGo logo — disposable temporary email service" width="112" height="60"><span>Temp<b>Mail</b>Go</span></a>
+        <p>Free, instant disposable email addresses that receive real messages and OTP codes — no signup, no personal data, no spam in your real inbox.</p>
+        <div class="trust-row" style="justify-content:flex-start">
+          <span class="trust-pill">🔒 No-log privacy</span>
+          <span class="trust-pill">⚡ 99.9% uptime</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="/">Temp Mail Inbox</a>
+        <a href="/how-it-works">How It Works</a>
+        <a href="/faq">FAQ</a>
+        <a href="/#features">Features</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="/blog">Blog</a>
+        <a href="/blog/how-does-temp-mail-work">How Temp Mail Works</a>
+        <a href="/blog/is-temp-mail-safe">Is Temp Mail Safe?</a>
+        <a href="/blog/temp-mail-vs-guerrilla-mail">Temp Mail vs Guerrilla Mail</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/terms">Terms of Service</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year">2026</span> TempMailGo. All rights reserved.</span>
+      <span>Made for privacy · Not affiliated with Gmail, Yahoo, or Outlook.</span>
+    </div>
+    <p class="footer-disclaimer">TempMailGo is a free disposable email tool intended for protecting your privacy from spam and for testing. Do not use temporary addresses for banking, government, healthcare, or any account you need to keep. Emails are automatically and permanently deleted when the inbox expires.</p>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/js/common.js" defer></script>
+
+</body>
+</html>
