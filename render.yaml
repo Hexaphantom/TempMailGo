@@ -10,7 +10,10 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
-      # Shared secret to authenticate your inbound-email webhook (set your own value).
-      - key: INBOUND_SECRET
+      # ALL of the following are OPTIONAL — the app runs with none set.
+      # Optionally pin a DropMail af_ token to avoid any token-generation captcha
+      # on IPs DropMail throttles (generate one at https://dropmail.me/api/).
+      # If unset, the server auto-generates and reuses a 1h token.
+      - key: DROPMAIL_TOKEN
         sync: false
     # Render provides PORT automatically; server.js already reads process.env.PORT.

@@ -40,7 +40,12 @@
   }
 
   function api(path, opts) {
-    return fetch(path, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opts))
+    opts = opts || {};
+    var headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
+    // Send the mailbox token on every request so the server stays stateless
+    // (works across restarts / multiple instances — the token is the source of truth).
+    if (state.token) headers['x-mail-token'] = state.token;
+    return fetch(path, Object.assign({}, opts, { headers: headers }))
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); });
   }
 
@@ -235,11 +240,6 @@
       });
     });
     if (el.qrBtn) el.qrBtn.addEventListener('click', showQr);
-
-    var demo = $('#demoBtn');
-    if (demo) demo.addEventListener('click', function () {
-      api('/api/demo-mail', { method: 'POST', body: JSON.stringify({ address: state.address }) }).then(function () { setTimeout(poll, 200); });
-    });
 
     if (el.list) {
       el.list.addEventListener('click', function (e) { var it = e.target.closest('.mail-item'); if (it) openMessage(it.dataset.id); });
