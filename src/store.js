@@ -1,11 +1,118 @@
 'use strict';
 /**
- * Small text utilities used by the mail.tm mappers in server.js.
+ * In-memory mailbox store with TTL expiry.
  * ---------------------------------------------------------------
- * NOTE: The old in-memory MailStore and the inbound webhook were removed when
- * TempMailGo switched to the mail.tm API — mail.tm now stores and delivers all
- * mail. Only these stateless helpers remain (HTML stripping + OTP detection).
+ * In production swap this module for Redis (SET ... EX <ttl>) so
+ * that multiple app instances share state and messages auto-expire.
+ * The public method surface below maps 1:1 to Redis operations, so
+ * migrating is mostly changing the internals of this file.
  */
+
+const crypto = require('crypto');
+
+const DEFAULT_TTL_MS = 60 * 60 * 1000; // 1 hour inbox lifetime
+
+class MailStore {
+  constructor() {
+    /** address(lowercase) -> { address, token, createdAt, expiresAt, messages:[] } */
+    this.mailboxes = new Map();
+    // sweep expired mailboxes every minute
+    this._sweeper = setInterval(() => this.sweep(), 60 * 1000);
+    if (this._sweeper.unref) this._sweeper.unref();
+  }
+
+  _key(addr) { return String(addr || '').trim().toLowerCase(); }
+
+  createMailbox(address, ttlMs = DEFAULT_TTL_MS) {
+    const key = this._key(address);
+    const now = Date.now();
+    const existing = this.mailboxes.get(key);
+    if (existing) return existing;
+    const box = {
+      address: key,
+      token: crypto.randomBytes(18).toString('base64url'),
+      createdAt: now,
+      expiresAt: now + ttlMs,
+      messages: [],
+    };
+    this.mailboxes.set(key, box);
+    return box;
+  }
+
+  getMailbox(address) {
+    const key = this._key(address);
+    const box = this.mailboxes.get(key);
+    if (!box) return null;
+    if (Date.now() > box.expiresAt) { this.mailboxes.delete(key); return null; }
+    return box;
+  }
+
+  extendMailbox(address, ttlMs = DEFAULT_TTL_MS) {
+    const box = this.getMailbox(address);
+    if (!box) return null;
+    box.expiresAt = Date.now() + ttlMs;
+    return box;
+  }
+
+  /** Deliver a normalized message object to an address. Returns message or null. */
+  deliver(address, message) {
+    let box = this.getMailbox(address);
+    // Auto-provision a mailbox on inbound delivery so a code sent to a
+    // freshly-generated address is never dropped due to a race.
+    if (!box) box = this.createMailbox(address);
+    const msg = {
+      id: crypto.randomBytes(10).toString('hex'),
+      from: message.from || 'unknown@sender',
+      fromName: message.fromName || '',
+      to: box.address,
+      subject: message.subject || '(no subject)',
+      text: message.text || '',
+      html: message.html || '',
+      snippet: (message.text || stripHtml(message.html || '') || '').slice(0, 140),
+      otp: extractOtp(message.subject, message.text, message.html),
+      attachments: (message.attachments || []).map(a => ({
+        filename: a.filename || 'attachment',
+        contentType: a.contentType || 'application/octet-stream',
+        size: a.size || 0,
+      })),
+      receivedAt: Date.now(),
+    };
+    box.messages.unshift(msg);
+    if (box.messages.length > 100) box.messages.length = 100;
+    return msg;
+  }
+
+  listMessages(address) {
+    const box = this.getMailbox(address);
+    return box ? box.messages : null;
+  }
+
+  getMessage(address, id) {
+    const box = this.getMailbox(address);
+    if (!box) return null;
+    return box.messages.find(m => m.id === id) || null;
+  }
+
+  deleteMessage(address, id) {
+    const box = this.getMailbox(address);
+    if (!box) return false;
+    const i = box.messages.findIndex(m => m.id === id);
+    if (i === -1) return false;
+    box.messages.splice(i, 1);
+    return true;
+  }
+
+  sweep() {
+    const now = Date.now();
+    for (const [k, box] of this.mailboxes) {
+      if (now > box.expiresAt) this.mailboxes.delete(k);
+    }
+  }
+
+  stats() {
+    return { mailboxes: this.mailboxes.size };
+  }
+}
 
 function stripHtml(html) {
   return String(html || '')
@@ -28,4 +135,4 @@ function extractOtp(subject, text, html) {
   return plain ? plain[1] : null;
 }
 
-module.exports = { stripHtml, extractOtp };
+module.exports = { MailStore, DEFAULT_TTL_MS, stripHtml, extractOtp };

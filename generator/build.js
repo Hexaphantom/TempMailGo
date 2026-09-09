@@ -98,6 +98,7 @@ ${header('/')}
           <button class="btn btn-ghost" id="newBtn">${I.refresh} New address</button>
           <button class="btn btn-ghost" id="extendBtn">${I.clock} Extend time</button>
           <button class="btn btn-ghost" id="qrBtn">${I.qr} Save / QR code</button>
+          <button class="btn btn-ghost" id="demoBtn" title="Send a sample email to preview the inbox">✉️ Send test email</button>
         </div>
 
         <div class="email-builder">
