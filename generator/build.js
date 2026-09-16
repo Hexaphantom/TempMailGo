@@ -1,17 +1,43 @@
 'use strict';
-/* Generates all static HTML pages into /public */
+/* Generates all static HTML pages into /public, for every supported language.
+ *
+ * URL scheme:
+ *   English (default) lives at the site root:            /,  /about,  /blog/...
+ *   Every other language lives under its code:           /fr/, /fr/about, /fr/blog/...
+ *
+ * Translation scope (per request): the homepage/marketing page + all shared UI
+ * chrome (nav, footer, language switcher, donation, toasts) are fully
+ * translated. Long-form pages (how-it-works, about, faq, blog, legal, contact)
+ * keep their English bodies but still get localized chrome, correct
+ * <html lang>/dir, hreflang alternates, and a working language switcher so they
+ * are crawlable and consistent in every locale.
+ */
 
 const fs = require('fs');
 const path = require('path');
-const { SITE, NAME, head, header, footer, adZone, scripts } = require('./layout');
+const { SITE, NAME, head, header, footer, adZone, scripts, localizedHref } = require('./layout');
 const { ARTICLES } = require('./blog-data');
+const i18n = require('./i18n');
+const { CODES, DEFAULT_LANG, prefixOf } = i18n;
+const tr = (lang, k) => i18n.tr(lang, k);
 
 const PUBLIC = path.join(__dirname, '..', 'public');
 function write(rel, html) {
   const full = path.join(PUBLIC, rel);
   fs.mkdirSync(path.dirname(full), { recursive: true });
   fs.writeFileSync(full, html);
-  console.log('wrote', rel);
+}
+
+// Output file path for a clean route in a given language.
+//   ('en', '/')           -> 'index.html'
+//   ('en', '/about')      -> 'about.html'
+//   ('fr', '/')           -> 'fr/index.html'
+//   ('fr', '/about')      -> 'fr/about.html'
+//   ('fr', '/blog/x')     -> 'fr/blog/x.html'
+function outPath(lang, cleanPath) {
+  const dir = prefixOf(lang).replace(/^\//, ''); // '' or 'fr'
+  let rel = cleanPath === '/' ? 'index' : cleanPath.replace(/^\//, '');
+  return (dir ? dir + '/' : '') + rel + '.html';
 }
 
 const orgSchema = {
@@ -35,13 +61,32 @@ const I = {
   lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
 };
 
-/* ================= HOME / APP ================= */
-function buildHome() {
+const HOME_FAQ_KEYS = [
+  ['q1', 'a1'], ['q2', 'a2'], ['q3', 'a3'], ['q4', 'a4'], ['q5', 'a5'], ['q6', 'a6'],
+];
+
+// English FAQ (used for JSON-LD on the English home page — must match visible text).
+const HOME_FAQ = [
+  { q: 'Is TempMailGo really free?', a: 'Yes. TempMailGo is 100% free with no signup, no account, and no hidden limits. Generate as many disposable addresses as you need.' },
+  { q: 'Can temp mail receive OTP and verification codes?', a: 'Absolutely. Our addresses receive real email OTPs and verification links. Detected codes are highlighted in your inbox so you can copy them instantly. Note that SMS codes require a phone number and cannot be received by email.' },
+  { q: 'Do I need to sign up or install anything?', a: 'No. TempMailGo works entirely in your browser with no signup, no download, and no app. Your address is ready the moment the page loads.' },
+  { q: 'How long does a temporary inbox last?', a: 'By default an inbox lasts one hour. You can extend it with one click, or save it via a QR code / restore link to bring the same address back later.' },
+  { q: 'Is my temporary email private?', a: 'We use random, private addresses and keep no logs of your activity. When an inbox expires, it and all its messages are permanently deleted. Still, never use temp mail for banking or sensitive accounts.' },
+  { q: 'Can I choose my own address and domain?', a: 'Yes. Pick from 10+ domains and optionally type a custom username before the @ symbol. If a website blocks one domain, simply switch to another.' },
+];
+
+/* ================= HOME / APP (fully translated) ================= */
+function buildHome(lang) {
+  const t = (k) => tr(lang, k);
+  const homeHref = localizedHref(lang, '/');
+
+  // FAQ JSON-LD in the page's language (mirrors the visible FAQ exactly).
+  const faqPairs = HOME_FAQ_KEYS.map(([qk, ak]) => ({ q: t(qk), a: t(ak) }));
   const schema = [
     orgSchema,
     {
       '@context': 'https://schema.org', '@type': 'WebApplication', name: NAME,
-      url: SITE + '/', applicationCategory: 'UtilitiesApplication', operatingSystem: 'Any (web-based)',
+      url: SITE + homeHref, applicationCategory: 'UtilitiesApplication', operatingSystem: 'Any (web-based)',
       browserRequirements: 'Requires JavaScript. Works in any modern browser.',
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
       description: 'Free disposable temporary email address that receives real emails and OTP verification codes instantly — no signup required.',
@@ -50,64 +95,58 @@ function buildHome() {
     },
     {
       '@context': 'https://schema.org', '@type': 'FAQPage',
-      mainEntity: HOME_FAQ.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+      mainEntity: faqPairs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
     },
   ];
+
   const featureCards = [
-    [I.bolt, 'Instant, no signup', 'A working address is generated the moment the page loads. No account, no password, no personal info — ever.'],
-    [I.clock, 'Real-time inbox', 'Incoming mail appears automatically within seconds. Live polling keeps your inbox fresh without a refresh.'],
-    [I.key, 'Receives real OTP codes', 'Get genuine verification codes and confirmation links. Detected codes are highlighted so you can copy them instantly.'],
-    [I.globe, '10+ domains', 'Choose from .com, .net, .org, .xyz, .online, .dev and more. Switch domains if a site blocks one.'],
-    [I.paperclip, 'Attachments & HTML', 'View full HTML and plain-text bodies, sender details, timestamps, and attachment info safely in a sandbox.'],
-    [I.shield, 'No-log privacy', 'We don’t track you or keep your mail. Inboxes self-destruct on expiry and everything is deleted for good.'],
-  ].map(([ic, t, d]) => `<article class="feature-card"><div class="feature-ico" aria-hidden="true">${ic}</div><h3>${t}</h3><p>${d}</p></article>`).join('');
+    [I.bolt, 'f1t', 'f1d'], [I.clock, 'f2t', 'f2d'], [I.key, 'f3t', 'f3d'],
+    [I.globe, 'f4t', 'f4d'], [I.paperclip, 'f5t', 'f5d'], [I.shield, 'f6t', 'f6d'],
+  ].map(([ic, tk, dk]) => `<article class="feature-card"><div class="feature-ico" aria-hidden="true">${ic}</div><h3>${t(tk)}</h3><p>${t(dk)}</p></article>`).join('');
 
   const steps = [
-    ['Get your address', 'Your free disposable email is ready the instant you land here. Copy it with one click.'],
-    ['Use it anywhere', 'Paste it into any signup, free trial, or form that asks for an email address.'],
-    ['Receive mail live', 'Verification codes and messages land in your inbox in real time — no refresh needed.'],
-    ['It self-destructs', 'When the timer ends, the inbox and every message are permanently deleted.'],
-  ].map(([t, d]) => `<div class="step"><h3>${t}</h3><p>${d}</p></div>`).join('');
+    ['s1t', 's1d'], ['s2t', 's2d'], ['s3t', 's3d'], ['s4t', 's4d'],
+  ].map(([tk, dk]) => `<div class="step"><h3>${t(tk)}</h3><p>${t(dk)}</p></div>`).join('');
 
-  const faqHtml = HOME_FAQ.map(f => `<details><summary>${f.q}</summary><p>${f.a}</p></details>`).join('');
+  const faqHtml = HOME_FAQ_KEYS.map(([qk, ak]) => `<details><summary>${t(qk)}</summary><p>${t(ak)}</p></details>`).join('');
 
   const body = `
-${header('/')}
+${header('/', lang)}
 <main>
   <section class="hero">
     <div class="container">
       <div class="hero-head">
-        <h1>Free Temporary Email — <span class="gradient-text">Instant Disposable Inbox</span></h1>
-        <p>Generate a free temp mail address that receives real emails and OTP verification codes in seconds. No signup, no personal info, no spam in your real inbox.</p>
+        <h1>${t('hero_h1a')} <span class="gradient-text">${t('hero_h1b')}</span></h1>
+        <p>${t('hero_sub')}</p>
         <div class="trust-row">
-          <span class="trust-pill">${I.lock} No-log privacy</span>
-          <span class="trust-pill">${I.bolt} Instant &amp; free</span>
-          <span class="trust-pill">${I.clock} 99.9% uptime</span>
-          <span class="trust-pill">${I.key} Receives OTP codes</span>
+          <span class="trust-pill">${I.lock} ${t('tp_nolog')}</span>
+          <span class="trust-pill">${I.bolt} ${t('tp_instant')}</span>
+          <span class="trust-pill">${I.clock} ${t('tp_uptime')}</span>
+          <span class="trust-pill">${I.key} ${t('tp_otp')}</span>
         </div>
       </div>
 
       <div class="mail-card">
-        <div class="mail-card-label"><span class="dot-live" aria-hidden="true"></span> Your temporary email address</div>
+        <div class="mail-card-label"><span class="dot-live" aria-hidden="true"></span> ${t('mc_label')}</div>
         <div class="email-display">
-          <span class="email-address" id="emailAddress" aria-live="polite">generating…</span>
-          <button class="btn btn-primary" id="copyBtn">${I.copy} Copy</button>
+          <span class="email-address" id="emailAddress" aria-live="polite">${t('addr_generating')}</span>
+          <button class="btn btn-primary" id="copyBtn">${I.copy} ${t('btn_copy')}</button>
         </div>
 
         <div class="email-actions">
-          <button class="btn btn-ghost" id="newBtn">${I.refresh} New address</button>
-          <button class="btn btn-ghost" id="extendBtn">${I.clock} Extend time</button>
-          <button class="btn btn-ghost" id="qrBtn">${I.qr} Save / QR code</button>
+          <button class="btn btn-ghost" id="newBtn">${I.refresh} ${t('btn_new')}</button>
+          <button class="btn btn-ghost" id="extendBtn">${I.clock} ${t('btn_extend')}</button>
+          <button class="btn btn-ghost" id="qrBtn">${I.qr} ${t('btn_qr')}</button>
         </div>
 
         <div class="email-builder">
-          <input type="text" id="userInput" placeholder="custom username (optional)" aria-label="Custom username">
+          <input type="text" id="userInput" placeholder="${t('ph_user')}" aria-label="${t('ph_user')}">
           <select id="domainSelect" aria-label="Choose a domain"></select>
-          <button class="btn btn-ghost" id="createBtn">Create custom</button>
+          <button class="btn btn-ghost" id="createBtn">${t('btn_create')}</button>
         </div>
 
         <div class="timer-bar">
-          <span>Inbox expires in</span>
+          <span>${t('timer_label')}</span>
           <span class="timer-val" id="timerVal">60:00</span>
           <div class="timer-track"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
         </div>
@@ -122,8 +161,8 @@ ${header('/')}
       <div>
         <div class="inbox">
           <div class="inbox-head">
-            <h2>Inbox <span class="inbox-count" id="inboxCount">0 messages</span></h2>
-            <button class="refresh-btn" id="refreshBtn" aria-label="Refresh inbox">${I.refresh}</button>
+            <h2>${t('inbox')} <span class="inbox-count" id="inboxCount">0 ${t('msg_many')}</span></h2>
+            <button class="refresh-btn" id="refreshBtn" aria-label="${t('refresh')}">${I.refresh}</button>
           </div>
           <ul class="mail-list" id="mailList" aria-live="polite"></ul>
         </div>
@@ -138,8 +177,8 @@ ${header('/')}
   <section class="section" id="features">
     <div class="container">
       <div class="section-head">
-        <h2>Everything you need in a temp mail service</h2>
-        <p>Built for privacy, speed, and real-world signups — from OTP verification to newsletters you’d rather not see again.</p>
+        <h2>${t('feat_head')}</h2>
+        <p>${t('feat_sub')}</p>
       </div>
       <div class="feature-grid">${featureCards}</div>
     </div>
@@ -147,17 +186,17 @@ ${header('/')}
 
   <section class="section" style="background:var(--bg-2);border-block:1px solid var(--border)">
     <div class="container">
-      <div class="section-head"><h2>How TempMailGo works</h2><p>Four steps, about five seconds, zero setup.</p></div>
+      <div class="section-head"><h2>${t('steps_head')}</h2><p>${t('steps_sub')}</p></div>
       <div class="steps">${steps}</div>
-      <p style="text-align:center;margin-top:28px"><a class="btn btn-primary" href="/how-it-works">Read the full technical breakdown</a></p>
+      <p style="text-align:center;margin-top:28px"><a class="btn btn-primary" href="${localizedHref(lang, '/how-it-works')}">${t('steps_cta')}</a></p>
     </div>
   </section>
 
   <section class="section">
     <div class="container">
-      <div class="section-head"><h2>Frequently asked questions</h2><p>Quick answers about disposable email, OTP codes, privacy, and safety.</p></div>
+      <div class="section-head"><h2>${t('faq_head')}</h2><p>${t('faq_sub')}</p></div>
       <div class="faq">${faqHtml}</div>
-      <p style="text-align:center;margin-top:22px"><a class="btn btn-ghost" href="/faq">See all FAQs</a></p>
+      <p style="text-align:center;margin-top:22px"><a class="btn btn-ghost" href="${localizedHref(lang, '/faq')}">${t('faq_all')}</a></p>
       ${adZone('ad-footer', 'Footer 728×90')}
     </div>
   </section>
@@ -171,8 +210,8 @@ ${header('/')}
       <button class="modal-close" data-close-modal aria-label="Close">×</button>
     </div>
     <div class="modal-tabs">
-      <button class="modal-tab active" id="tabHtml">HTML</button>
-      <button class="modal-tab" id="tabText">Plain text</button>
+      <button class="modal-tab active" id="tabHtml">${t('modal_html')}</button>
+      <button class="modal-tab" id="tabText">${t('modal_text')}</button>
     </div>
     <div class="modal-body">
       <div id="viewHtml"><iframe id="htmlFrame" class="mail-html-frame" title="Email HTML content" sandbox></iframe></div>
@@ -185,42 +224,36 @@ ${header('/')}
 <!-- QR / save modal -->
 <div class="modal-backdrop" id="qrModal" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
   <div class="modal" style="max-width:440px">
-    <div class="modal-head"><div><h3 id="qrTitle">Save your inbox</h3><div class="modal-sub">Scan or copy this link to restore this exact address later.</div></div><button class="modal-close" data-close-modal aria-label="Close">×</button></div>
+    <div class="modal-head"><div><h3 id="qrTitle">${t('save_title')}</h3><div class="modal-sub">${t('save_sub')}</div></div><button class="modal-close" data-close-modal aria-label="Close">×</button></div>
     <div class="modal-body" style="text-align:center">
       <div id="qrImg" style="display:grid;place-items:center;min-height:220px"></div>
       <div style="display:flex;gap:8px;margin-top:16px">
         <input id="qrData" readonly style="flex:1;padding:.6em .8em;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:.85rem">
-        <button class="btn btn-primary btn-sm" id="copyQr">Copy link</button>
+        <button class="btn btn-primary btn-sm" id="copyQr">${t('copy_link')}</button>
       </div>
     </div>
   </div>
 </div>
 
-${footer()}
+${footer(lang)}
 `;
   const html = head({
+    lang,
     path: '/',
-    title: 'TempMailGo — Free Temp Mail & Disposable Email (Instant, No Signup)',
-    description: 'Free temporary email that receives real messages and OTP codes instantly. Disposable, anonymous, no signup. 10+ domains, real-time inbox, and dark mode.',
+    title: t('meta_title'),
+    description: t('meta_desc'),
     keywords: 'temp mail, temp mail free, temporary email, disposable email, fake email generator, burner email, throwaway email, temp mail no sign up, temp mail otp, receive verification code, anonymous email, 10 minute mail',
     schema,
-  }) + body + scripts('<script src="/js/app.js" defer></script>');
-  write('index.html', html);
+  }) + body + scripts('<script src="/js/app.js" defer></script>', lang);
+  write(outPath(lang, '/'), html);
 }
 
-const HOME_FAQ = [
-  { q: 'Is TempMailGo really free?', a: 'Yes. TempMailGo is 100% free with no signup, no account, and no hidden limits. Generate as many disposable addresses as you need.' },
-  { q: 'Can temp mail receive OTP and verification codes?', a: 'Absolutely. Our addresses receive real email OTPs and verification links. Detected codes are highlighted in your inbox so you can copy them instantly. Note that SMS codes require a phone number and cannot be received by email.' },
-  { q: 'Do I need to sign up or install anything?', a: 'No. TempMailGo works entirely in your browser with no signup, no download, and no app. Your address is ready the moment the page loads.' },
-  { q: 'How long does a temporary inbox last?', a: 'By default an inbox lasts one hour. You can extend it with one click, or save it via a QR code / restore link to bring the same address back later.' },
-  { q: 'Is my temporary email private?', a: 'We use random, private addresses and keep no logs of your activity. When an inbox expires, it and all its messages are permanently deleted. Still, never use temp mail for banking or sensitive accounts.' },
-  { q: 'Can I choose my own address and domain?', a: 'Yes. Pick from 10+ domains and optionally type a custom username before the @ symbol. If a website blocks one domain, simply switch to another.' },
-];
-
 /* ================= CONTENT PAGE WRAPPER ================= */
-function contentPage({ path: p, title, description, keywords, h1, eyebrow, bodyHtml, schema, breadcrumb }) {
+// English body pages with localized chrome (header/footer/switcher/donation),
+// correct <html lang>/dir and hreflang. Body prose stays English by design.
+function contentPage(lang, { path: p, title, description, keywords, h1, eyebrow, bodyHtml, schema, breadcrumb }) {
   const body = `
-${header(p)}
+${header(p, lang)}
 <main class="page">
   <div class="container">
     ${adZone('ad-leaderboard', 'Header 728×90')}
@@ -238,33 +271,36 @@ ${header(p)}
     ${adZone('ad-footer', 'Footer 728×90')}
   </div>
 </main>
-${footer()}
+${footer(lang)}
 `;
-  const html = head({ path: p, title, description, keywords, schema: schema || [orgSchema] }) + body + scripts();
-  write((p === '/' ? 'index' : p.replace(/^\//, '')) + '.html', html);
+  const html = head({ lang, path: p, title, description, keywords, schema: schema || [orgSchema] }) + body + scripts('', lang);
+  write(outPath(lang, p), html);
 }
 
-function crumb(items) {
-  return items.map((it, i) => it.href ? `<a href="${it.href}">${it.label}</a>${i < items.length - 1 ? ' › ' : ''}` : `${it.label}`).join('');
+function crumbLang(lang, items) {
+  return items.map((it, i) => it.href
+    ? `<a href="${localizedHref(lang, it.href)}">${it.label}</a>${i < items.length - 1 ? ' › ' : ''}`
+    : `${it.label}`).join('');
 }
-function breadcrumbSchema(items) {
+function breadcrumbSchema(lang, items) {
   return {
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',
-    itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.label, item: SITE + (it.href || '') })),
+    itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.label, item: SITE + localizedHref(lang, it.href || '/') })),
   };
 }
 
 /* ================= ABOUT ================= */
-contentPage({
-  path: '/about',
-  title: 'About TempMailGo — Our Mission for Private, Spam-Free Email',
-  description: 'Learn about TempMailGo, a free disposable email service built to protect your privacy, stop spam, and make online signups fast and anonymous.',
-  keywords: 'about temp mail, temp mail service, private temp mail, anonymous email',
-  eyebrow: 'About us',
-  h1: 'About TempMailGo',
-  breadcrumb: crumb([{ label: 'Home', href: '/' }, { label: 'About' }]),
-  schema: [orgSchema, breadcrumbSchema([{ label: 'Home', href: '/' }, { label: 'About', href: '/about' }])],
-  bodyHtml: `
+function buildAbout(lang) {
+  contentPage(lang, {
+    path: '/about',
+    title: 'About TempMailGo — Our Mission for Private, Spam-Free Email',
+    description: 'Learn about TempMailGo, a free disposable email service built to protect your privacy, stop spam, and make online signups fast and anonymous.',
+    keywords: 'about temp mail, temp mail service, private temp mail, anonymous email',
+    eyebrow: 'About us',
+    h1: 'About TempMailGo',
+    breadcrumb: crumbLang(lang, [{ label: 'Home', href: '/' }, { label: 'About' }]),
+    schema: [orgSchema, breadcrumbSchema(lang, [{ label: 'Home', href: '/' }, { label: 'About', href: '/about' }])],
+    bodyHtml: `
 <p class="lead">TempMailGo exists for one simple reason: <strong>you shouldn’t have to hand over your real email address just to read an article, download a file, or try a free trial.</strong></p>
 <p>Every day, millions of email addresses are collected, sold, and leaked. Once your address is out there, the spam never really stops. We built TempMailGo to give everyone a fast, free, and private way to interact with the web without paying for it in junk mail and data breaches.</p>
 
@@ -282,26 +318,28 @@ contentPage({
 <h2>Who it’s for</h2>
 <p>Privacy-conscious users avoiding spam, shoppers trying new stores, readers getting past email walls, and developers testing signup flows. If you’ve ever paused before typing your real email, TempMailGo is for you.</p>
 
-<div class="callout"><strong>A note on responsible use:</strong> TempMailGo is a privacy tool, not a shield for abuse. Please use it lawfully and never for fraud, harassment, or evading legitimate security. See our <a href="/terms">Terms of Service</a>.</div>
+<div class="callout"><strong>A note on responsible use:</strong> TempMailGo is a privacy tool, not a shield for abuse. Please use it lawfully and never for fraud, harassment, or evading legitimate security. See our <a href="${localizedHref(lang, '/terms')}">Terms of Service</a>.</div>
 
 <h2>How we keep the lights on</h2>
 <p>TempMailGo is supported by unobtrusive, clearly-labeled advertising placed around — never inside — the functional parts of the app. That lets us keep the service free for everyone while respecting your experience. We do not sell your data; we don’t have your data to sell.</p>
 
-<p>Questions or feedback? We’d love to hear from you on our <a href="/contact">contact page</a>.</p>
+<p>Questions or feedback? We’d love to hear from you on our <a href="${localizedHref(lang, '/contact')}">contact page</a>.</p>
 `,
-});
+  });
+}
 
 /* ================= HOW IT WORKS ================= */
-contentPage({
-  path: '/how-it-works',
-  title: 'How It Works — The Technology Behind TempMailGo Temp Mail',
-  description: 'How TempMailGo works: MX records, catch-all mail servers, inbound email APIs, and a real-time inbox that delivers disposable email and OTP codes.',
-  keywords: 'how does temp mail work, how temp mail works, temp mail infrastructure, MX records, inbound email api',
-  eyebrow: 'How it works',
-  h1: 'How TempMailGo Works',
-  breadcrumb: crumb([{ label: 'Home', href: '/' }, { label: 'How It Works' }]),
-  schema: [orgSchema, breadcrumbSchema([{ label: 'Home', href: '/' }, { label: 'How It Works', href: '/how-it-works' }])],
-  bodyHtml: `
+function buildHowItWorks(lang) {
+  contentPage(lang, {
+    path: '/how-it-works',
+    title: 'How It Works — The Technology Behind TempMailGo Temp Mail',
+    description: 'How TempMailGo works: MX records, catch-all mail servers, inbound email APIs, and a real-time inbox that delivers disposable email and OTP codes.',
+    keywords: 'how does temp mail work, how temp mail works, temp mail infrastructure, MX records, inbound email api',
+    eyebrow: 'How it works',
+    h1: 'How TempMailGo Works',
+    breadcrumb: crumbLang(lang, [{ label: 'Home', href: '/' }, { label: 'How It Works' }]),
+    schema: [orgSchema, breadcrumbSchema(lang, [{ label: 'Home', href: '/' }, { label: 'How It Works', href: '/how-it-works' }])],
+    bodyHtml: `
 <p class="lead">TempMailGo looks effortless — an address appears, and codes arrive. Under the hood it runs on the same email infrastructure the rest of the internet uses. Here’s the whole picture.</p>
 
 <div class="article-hero"><img src="/blog/img/how-temp-mail-works.png" alt="Diagram showing how a temporary email flows from sender through MX records and a mail server into a real-time inbox" loading="lazy" width="1200" height="514"></div>
@@ -334,11 +372,12 @@ contentPage({
   <tr><td>Expiry job</td><td>Permanently delete on timeout</td></tr>
 </table>
 
-<div class="callout">Curious about safety and privacy trade-offs? Read <a href="/blog/is-temp-mail-safe">Is Temp Mail Safe?</a> Want the OTP flow specifically? See <a href="/blog/how-otp-verification-works">How OTP Verification Works</a>.</div>
+<div class="callout">Curious about safety and privacy trade-offs? Read <a href="${localizedHref(lang, '/blog/is-temp-mail-safe')}">Is Temp Mail Safe?</a> Want the OTP flow specifically? See <a href="${localizedHref(lang, '/blog/how-otp-verification-works')}">How OTP Verification Works</a>.</div>
 
-<p style="margin-top:24px"><a class="btn btn-primary" href="/">Try your live inbox now</a></p>
+<p style="margin-top:24px"><a class="btn btn-primary" href="${localizedHref(lang, '/')}">Try your live inbox now</a></p>
 `,
-});
+  });
+}
 
 /* ================= FAQ ================= */
 const FULL_FAQ = [
@@ -357,37 +396,40 @@ const FULL_FAQ = [
   { q: 'Can I use the same temp email twice?', a: 'While an inbox is active, yes. After it expires the address is released. Use the save/QR feature if you want to reliably restore the same address later.' },
   { q: 'Why was my temp address rejected by a website?', a: 'Some sites blocklist known disposable domains. Switch to a different TempMailGo domain or set a clean custom username and try again.' },
 ];
-contentPage({
-  path: '/faq',
-  title: 'Temp Mail FAQ — Answers About Disposable Email & OTP Codes',
-  description: 'Frequently asked questions about TempMailGo temp mail: OTP codes, privacy, safety, custom domains, expiry, and when not to use disposable email.',
-  keywords: 'temp mail faq, can temp mail receive otp, is temp mail safe, how long does temp mail last, can i use temp mail for banking',
-  eyebrow: 'Support',
-  h1: 'Frequently Asked Questions',
-  breadcrumb: crumb([{ label: 'Home', href: '/' }, { label: 'FAQ' }]),
-  schema: [
-    orgSchema,
-    breadcrumbSchema([{ label: 'Home', href: '/' }, { label: 'FAQ', href: '/faq' }]),
-    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: FULL_FAQ.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
-  ],
-  bodyHtml: `<p class="lead">Everything you need to know about using TempMailGo and disposable email in general. Can’t find your answer? <a href="/contact">Contact us</a>.</p>
+function buildFaq(lang) {
+  contentPage(lang, {
+    path: '/faq',
+    title: 'Temp Mail FAQ — Answers About Disposable Email & OTP Codes',
+    description: 'Frequently asked questions about TempMailGo temp mail: OTP codes, privacy, safety, custom domains, expiry, and when not to use disposable email.',
+    keywords: 'temp mail faq, can temp mail receive otp, is temp mail safe, how long does temp mail last, can i use temp mail for banking',
+    eyebrow: 'Support',
+    h1: 'Frequently Asked Questions',
+    breadcrumb: crumbLang(lang, [{ label: 'Home', href: '/' }, { label: 'FAQ' }]),
+    schema: [
+      orgSchema,
+      breadcrumbSchema(lang, [{ label: 'Home', href: '/' }, { label: 'FAQ', href: '/faq' }]),
+      { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: FULL_FAQ.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+    ],
+    bodyHtml: `<p class="lead">Everything you need to know about using TempMailGo and disposable email in general. Can’t find your answer? <a href="${localizedHref(lang, '/contact')}">Contact us</a>.</p>
   <div class="faq">${FULL_FAQ.map(f => `<details><summary>${f.q}</summary><p>${f.a}</p></details>`).join('')}</div>`,
-});
+  });
+}
 
 /* ================= CONTACT ================= */
-contentPage({
-  path: '/contact',
-  title: 'Contact TempMailGo — Support, Feedback & Business Enquiries',
-  description: 'Get in touch with the TempMailGo team for support, feedback, abuse reports, or business enquiries. We usually reply within two business days.',
-  keywords: 'contact temp mail, temp mail support, temp mail feedback',
-  eyebrow: 'Get in touch',
-  h1: 'Contact Us',
-  breadcrumb: crumb([{ label: 'Home', href: '/' }, { label: 'Contact' }]),
-  schema: [orgSchema, breadcrumbSchema([{ label: 'Home', href: '/' }, { label: 'Contact', href: '/contact' }]),
-    { '@context': 'https://schema.org', '@type': 'ContactPage', name: 'Contact TempMailGo', url: SITE + '/contact' }],
-  bodyHtml: `
+function buildContact(lang) {
+  contentPage(lang, {
+    path: '/contact',
+    title: 'Contact TempMailGo — Support, Feedback & Business Enquiries',
+    description: 'Get in touch with the TempMailGo team for support, feedback, abuse reports, or business enquiries. We usually reply within two business days.',
+    keywords: 'contact temp mail, temp mail support, temp mail feedback',
+    eyebrow: 'Get in touch',
+    h1: 'Contact Us',
+    breadcrumb: crumbLang(lang, [{ label: 'Home', href: '/' }, { label: 'Contact' }]),
+    schema: [orgSchema, breadcrumbSchema(lang, [{ label: 'Home', href: '/' }, { label: 'Contact', href: '/contact' }]),
+      { '@context': 'https://schema.org', '@type': 'ContactPage', name: 'Contact TempMailGo', url: SITE + localizedHref(lang, '/contact') }],
+    bodyHtml: `
 <p class="lead">We’d love to hear from you — whether it’s a bug, a feature idea, a partnership, or an abuse report.</p>
-<p>Email us directly at <a href="mailto:support@tempmailgo.com">support@tempmailgo.com</a> and we’ll typically respond within two business days. For abuse or legal notices, use <a href="mailto:abuse@tempmailgo.com">abuse@tempmailgo.com</a>.</p>
+<p>Email us directly at <a href="mailto:support@freetempmailgo.xyz">support@freetempmailgo.xyz</a> and we’ll typically respond within two business days. For abuse or legal notices, use <a href="mailto:abuse@freetempmailgo.xyz">abuse@freetempmailgo.xyz</a>.</p>
 
 <form class="form-grid" id="contactForm" onsubmit="event.preventDefault();var t=document.getElementById('toast');t.textContent='✅ Thanks! Your message has been noted. We\\'ll reply by email.';t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3000);this.reset();">
   <div class="form-field"><label for="cName">Name</label><input id="cName" name="name" required autocomplete="name"></div>
@@ -402,24 +444,26 @@ contentPage({
 
 <h2>Other ways to reach us</h2>
 <ul>
-  <li><strong>Support:</strong> <a href="mailto:support@tempmailgo.com">support@tempmailgo.com</a></li>
-  <li><strong>Privacy questions:</strong> <a href="mailto:privacy@tempmailgo.com">privacy@tempmailgo.com</a></li>
-  <li><strong>Abuse / legal:</strong> <a href="mailto:abuse@tempmailgo.com">abuse@tempmailgo.com</a></li>
+  <li><strong>Support:</strong> <a href="mailto:support@freetempmailgo.xyz">support@freetempmailgo.xyz</a></li>
+  <li><strong>Privacy questions:</strong> <a href="mailto:privacy@freetempmailgo.xyz">privacy@freetempmailgo.xyz</a></li>
+  <li><strong>Abuse / legal:</strong> <a href="mailto:abuse@freetempmailgo.xyz">abuse@freetempmailgo.xyz</a></li>
 </ul>
 `,
-});
+  });
+}
 
 /* ================= PRIVACY ================= */
-contentPage({
-  path: '/privacy',
-  title: 'Privacy Policy — TempMailGo Disposable Email',
-  description: 'TempMailGo Privacy Policy: how we handle temporary emails, what we do and don’t store, cookies, third-party advertising, and your rights.',
-  keywords: 'temp mail privacy policy, disposable email privacy, no log email',
-  eyebrow: 'Legal',
-  h1: 'Privacy Policy',
-  breadcrumb: crumb([{ label: 'Home', href: '/' }, { label: 'Privacy Policy' }]),
-  schema: [orgSchema, breadcrumbSchema([{ label: 'Home', href: '/' }, { label: 'Privacy Policy', href: '/privacy' }])],
-  bodyHtml: `
+function buildPrivacy(lang) {
+  contentPage(lang, {
+    path: '/privacy',
+    title: 'Privacy Policy — TempMailGo Disposable Email',
+    description: 'TempMailGo Privacy Policy: how we handle temporary emails, what we do and don’t store, cookies, third-party advertising, and your rights.',
+    keywords: 'temp mail privacy policy, disposable email privacy, no log email',
+    eyebrow: 'Legal',
+    h1: 'Privacy Policy',
+    breadcrumb: crumbLang(lang, [{ label: 'Home', href: '/' }, { label: 'Privacy Policy' }]),
+    schema: [orgSchema, breadcrumbSchema(lang, [{ label: 'Home', href: '/' }, { label: 'Privacy Policy', href: '/privacy' }])],
+    bodyHtml: `
 <p><em>Last updated: 8 September 2026.</em></p>
 <p>TempMailGo (“we”, “us”) is a free disposable email service. This Privacy Policy explains what information we handle when you use our website and service, and the choices you have. Because this is an email tool, we take data handling seriously and aim to collect as little as possible.</p>
 
@@ -456,7 +500,7 @@ contentPage({
 <p>We do not sell your personal data. We may share limited technical data with service providers (e.g. hosting, our email-receiving provider, and advertising partners) strictly to operate the service, and where legally required.</p>
 
 <h2>7. Your rights</h2>
-<p>Depending on your location (including under the GDPR and CCPA), you may have rights to access, delete, or restrict processing of personal data. Because we intentionally hold very little personal data and delete messages automatically, most content is already ephemeral. To make a request, email <a href="mailto:privacy@tempmailgo.com">privacy@tempmailgo.com</a>.</p>
+<p>Depending on your location (including under the GDPR and CCPA), you may have rights to access, delete, or restrict processing of personal data. Because we intentionally hold very little personal data and delete messages automatically, most content is already ephemeral. To make a request, email <a href="mailto:privacy@freetempmailgo.xyz">privacy@freetempmailgo.xyz</a>.</p>
 
 <h2>8. Children</h2>
 <p>TempMailGo is not directed to children under 13 (or the minimum age in your jurisdiction) and we do not knowingly collect their data.</p>
@@ -468,21 +512,23 @@ contentPage({
 <p>We may update this policy; the “last updated” date will change accordingly. Continued use after an update constitutes acceptance.</p>
 
 <h2>11. Contact</h2>
-<p>Questions about privacy? Email <a href="mailto:privacy@tempmailgo.com">privacy@tempmailgo.com</a> or visit our <a href="/contact">contact page</a>.</p>
+<p>Questions about privacy? Email <a href="mailto:privacy@freetempmailgo.xyz">privacy@freetempmailgo.xyz</a> or visit our <a href="${localizedHref(lang, '/contact')}">contact page</a>.</p>
 `,
-});
+  });
+}
 
 /* ================= TERMS ================= */
-contentPage({
-  path: '/terms',
-  title: 'Terms of Service — TempMailGo',
-  description: 'The Terms of Service governing your use of TempMailGo’s free disposable email service, including acceptable use and disclaimers.',
-  keywords: 'temp mail terms of service, disposable email terms',
-  eyebrow: 'Legal',
-  h1: 'Terms of Service',
-  breadcrumb: crumb([{ label: 'Home', href: '/' }, { label: 'Terms of Service' }]),
-  schema: [orgSchema, breadcrumbSchema([{ label: 'Home', href: '/' }, { label: 'Terms of Service', href: '/terms' }])],
-  bodyHtml: `
+function buildTerms(lang) {
+  contentPage(lang, {
+    path: '/terms',
+    title: 'Terms of Service — TempMailGo',
+    description: 'The Terms of Service governing your use of TempMailGo’s free disposable email service, including acceptable use and disclaimers.',
+    keywords: 'temp mail terms of service, disposable email terms',
+    eyebrow: 'Legal',
+    h1: 'Terms of Service',
+    breadcrumb: crumbLang(lang, [{ label: 'Home', href: '/' }, { label: 'Terms of Service' }]),
+    schema: [orgSchema, breadcrumbSchema(lang, [{ label: 'Home', href: '/' }, { label: 'Terms of Service', href: '/terms' }])],
+    bodyHtml: `
 <p><em>Last updated: 8 September 2026.</em></p>
 <p>By accessing or using TempMailGo (the “Service”), you agree to these Terms of Service. If you do not agree, please do not use the Service.</p>
 
@@ -521,15 +567,16 @@ contentPage({
 <p>We may update these Terms from time to time. Continued use after changes constitutes acceptance of the revised Terms.</p>
 
 <h2>10. Contact</h2>
-<p>Questions about these Terms? Email <a href="mailto:support@tempmailgo.com">support@tempmailgo.com</a>.</p>
+<p>Questions about these Terms? Email <a href="mailto:support@freetempmailgo.xyz">support@freetempmailgo.xyz</a>.</p>
 `,
-});
+  });
+}
 
 /* ================= BLOG INDEX ================= */
-function buildBlogIndex() {
+function buildBlogIndex(lang) {
   const sorted = [...ARTICLES].sort((a, b) => b.date.localeCompare(a.date));
   const cards = sorted.map(a => `
-    <a class="blog-card" href="/blog/${a.slug}">
+    <a class="blog-card" href="${localizedHref(lang, '/blog/' + a.slug)}">
       <div class="blog-thumb"><img src="${a.img}" alt="${a.title}" loading="lazy" width="600" height="338"></div>
       <div class="blog-card-body">
         <div class="blog-tag">${a.tag}</div>
@@ -541,15 +588,15 @@ function buildBlogIndex() {
 
   const schema = [
     orgSchema,
-    breadcrumbSchema([{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog' }]),
-    { '@context': 'https://schema.org', '@type': 'Blog', name: 'TempMailGo Blog', url: SITE + '/blog',
-      blogPost: sorted.map(a => ({ '@type': 'BlogPosting', headline: a.title, url: SITE + '/blog/' + a.slug, datePublished: a.date, image: SITE + a.img })) },
+    breadcrumbSchema(lang, [{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog' }]),
+    { '@context': 'https://schema.org', '@type': 'Blog', name: 'TempMailGo Blog', url: SITE + localizedHref(lang, '/blog'),
+      blogPost: sorted.map(a => ({ '@type': 'BlogPosting', headline: a.title, url: SITE + localizedHref(lang, '/blog/' + a.slug), datePublished: a.date, image: SITE + a.img })) },
   ];
   const body = `
-${header('/blog')}
+${header('/blog', lang)}
 <main class="page">
   <div class="container">
-    <nav class="breadcrumb" aria-label="Breadcrumb">${crumb([{ label: 'Home', href: '/' }, { label: 'Blog' }])}</nav>
+    <nav class="breadcrumb" aria-label="Breadcrumb">${crumbLang(lang, [{ label: 'Home', href: '/' }, { label: 'Blog' }])}</nav>
     <div class="section-head" style="text-align:left;max-width:720px;margin-bottom:8px">
       <div class="eyebrow">Resources</div>
       <h1>The TempMailGo Blog</h1>
@@ -560,42 +607,43 @@ ${header('/blog')}
     ${adZone('ad-footer', 'Footer 728×90')}
   </div>
 </main>
-${footer()}
+${footer(lang)}
 `;
   const html = head({
+    lang,
     path: '/blog',
     title: 'Temp Mail Blog — Guides on Disposable Email, OTP & Privacy | TempMailGo',
     description: 'Read the TempMailGo blog for guides on how temp mail works, whether disposable email is safe, OTP verification, and comparisons like temp mail vs Guerrilla Mail.',
     keywords: 'temp mail blog, how does temp mail work, is temp mail safe, temp mail vs guerrilla mail, temp mail otp',
     schema,
-  }) + body + scripts();
-  write('blog/index.html', html);
+  }) + body + scripts('', lang);
+  write(outPath(lang, '/blog'), html);
 }
 
 /* ================= BLOG ARTICLES ================= */
-function buildArticles() {
+function buildArticles(lang) {
   ARTICLES.forEach(a => {
     const others = ARTICLES.filter(x => x.slug !== a.slug).slice(0, 3);
-    const related = others.map(o => `<a class="blog-card" href="/blog/${o.slug}"><div class="blog-thumb"><img src="${o.img}" alt="${o.title}" loading="lazy" width="600" height="338"></div><div class="blog-card-body"><div class="blog-tag">${o.tag}</div><h3>${o.title}</h3></div></a>`).join('');
+    const related = others.map(o => `<a class="blog-card" href="${localizedHref(lang, '/blog/' + o.slug)}"><div class="blog-thumb"><img src="${o.img}" alt="${o.title}" loading="lazy" width="600" height="338"></div><div class="blog-card-body"><div class="blog-tag">${o.tag}</div><h3>${o.title}</h3></div></a>`).join('');
     const schema = [
       orgSchema,
-      breadcrumbSchema([{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog' }, { label: a.title, href: '/blog/' + a.slug }]),
+      breadcrumbSchema(lang, [{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog' }, { label: a.title, href: '/blog/' + a.slug }]),
       {
         '@context': 'https://schema.org', '@type': 'BlogPosting',
         headline: a.title, description: a.description,
         image: SITE + a.img, datePublished: a.date, dateModified: a.date,
         author: { '@type': 'Organization', name: NAME }, publisher: orgSchema,
-        mainEntityOfPage: { '@type': 'WebPage', '@id': SITE + '/blog/' + a.slug },
+        mainEntityOfPage: { '@type': 'WebPage', '@id': SITE + localizedHref(lang, '/blog/' + a.slug) },
       },
     ];
     const body = `
-${header('/blog')}
+${header('/blog', lang)}
 <main class="page">
   <div class="container">
     ${adZone('ad-leaderboard', 'Header 728×90')}
     <div class="page-layout">
       <article class="prose">
-        <nav class="breadcrumb" aria-label="Breadcrumb">${crumb([{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog' }, { label: a.tag }])}</nav>
+        <nav class="breadcrumb" aria-label="Breadcrumb">${crumbLang(lang, [{ label: 'Home', href: '/' }, { label: 'Blog', href: '/blog' }, { label: a.tag }])}</nav>
         <div class="eyebrow">${a.tag}</div>
         <h1>${a.title}</h1>
         <div class="article-meta"><span>${new Date(a.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span><span>·</span><span>${a.read}</span></div>
@@ -604,7 +652,7 @@ ${header('/blog')}
         ${adZone('ad-inline', 'In-content responsive')}
         <div class="callout" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
           <div><strong>Try TempMailGo free</strong> — a live disposable inbox in one click.</div>
-          <a class="btn btn-primary" href="/">Get a temp email</a>
+          <a class="btn btn-primary" href="${localizedHref(lang, '/')}">Get a temp email</a>
         </div>
         <h2>Related articles</h2>
         <div class="blog-grid">${related}</div>
@@ -614,19 +662,21 @@ ${header('/blog')}
     ${adZone('ad-footer', 'Footer 728×90')}
   </div>
 </main>
-${footer()}
+${footer(lang)}
 `;
     const html = head({
-      path: '/blog/' + a.slug, ogType: 'article',
+      lang, path: '/blog/' + a.slug, ogType: 'article',
       title: a.metaTitle, description: a.description, keywords: a.keywords, schema,
-    }) + body + scripts();
-    write('blog/' + a.slug + '.html', html);
+    }) + body + scripts('', lang);
+    write(outPath(lang, '/blog/' + a.slug), html);
   });
 }
 
 /* ================= 404 ================= */
 function build404() {
-  const body = `${header('')}
+  // Single English 404 at the root (served for unknown paths in any language).
+  const lang = DEFAULT_LANG;
+  const body = `${header('', lang)}
 <main class="page"><div class="container" style="text-align:center;padding:60px 0">
   <div class="eyebrow">Error 404</div>
   <h1>This inbox doesn’t exist</h1>
@@ -634,33 +684,49 @@ function build404() {
   <a class="btn btn-primary" href="/">Go to the inbox</a>
   <a class="btn btn-ghost" href="/blog" style="margin-left:8px">Read the blog</a>
 </div></main>
-${footer()}`;
-  const html = head({ path: '/404', title: 'Page Not Found — TempMailGo', description: 'The page you requested could not be found.' }) + body + scripts();
+${footer(lang)}`;
+  const html = head({ lang, path: '/404', title: 'Page Not Found — TempMailGo', description: 'The page you requested could not be found.' }) + body + scripts('', lang);
   write('404.html', html);
 }
 
 /* ================= SITEMAP + ROBOTS ================= */
+// Clean routes that exist in every language.
+const ROUTES = [
+  { loc: '/', pri: '1.0', freq: 'daily' },
+  { loc: '/how-it-works', pri: '0.8', freq: 'monthly' },
+  { loc: '/about', pri: '0.6', freq: 'monthly' },
+  { loc: '/faq', pri: '0.8', freq: 'monthly' },
+  { loc: '/contact', pri: '0.5', freq: 'yearly' },
+  { loc: '/privacy', pri: '0.4', freq: 'yearly' },
+  { loc: '/terms', pri: '0.4', freq: 'yearly' },
+  { loc: '/blog', pri: '0.9', freq: 'weekly' },
+  ...ARTICLES.map(a => ({ loc: '/blog/' + a.slug, pri: '0.7', freq: 'monthly', lastmod: a.date })),
+];
+
 function buildSitemap() {
-  const urls = [
-    { loc: '/', pri: '1.0', freq: 'daily' },
-    { loc: '/how-it-works', pri: '0.8', freq: 'monthly' },
-    { loc: '/about', pri: '0.6', freq: 'monthly' },
-    { loc: '/faq', pri: '0.8', freq: 'monthly' },
-    { loc: '/contact', pri: '0.5', freq: 'yearly' },
-    { loc: '/privacy', pri: '0.4', freq: 'yearly' },
-    { loc: '/terms', pri: '0.4', freq: 'yearly' },
-    { loc: '/blog', pri: '0.9', freq: 'weekly' },
-    ...ARTICLES.map(a => ({ loc: '/blog/' + a.slug, pri: '0.7', freq: 'monthly', lastmod: a.date })),
-  ];
   const today = new Date().toISOString().slice(0, 10);
+  const XHT = 'http://www.w3.org/1999/xhtml';
+  const entries = [];
+  for (const code of CODES) {
+    for (const r of ROUTES) {
+      const loc = SITE + localizedHref(code, r.loc);
+      // hreflang alternates for this route across all languages + x-default.
+      const alts = CODES.map(c =>
+        `    <xhtml:link rel="alternate" hreflang="${c}" href="${SITE + localizedHref(c, r.loc)}"/>`
+      ).join('\n') +
+        `\n    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE + localizedHref(DEFAULT_LANG, r.loc)}"/>`;
+      entries.push(`  <url>
+    <loc>${loc}</loc>
+    <lastmod>${r.lastmod || today}</lastmod>
+    <changefreq>${r.freq}</changefreq>
+    <priority>${r.pri}</priority>
+${alts}
+  </url>`);
+    }
+  }
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map(u => `  <url>
-    <loc>${SITE}${u.loc}</loc>
-    <lastmod>${u.lastmod || today}</lastmod>
-    <changefreq>${u.freq}</changefreq>
-    <priority>${u.pri}</priority>
-  </url>`).join('\n')}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="${XHT}">
+${entries.join('\n')}
 </urlset>`;
   write('sitemap.xml', xml);
 
@@ -673,9 +739,19 @@ Sitemap: ${SITE}/sitemap.xml
 }
 
 /* ---- run ---- */
-buildHome();
-buildBlogIndex();
-buildArticles();
+let pageCount = 0;
+for (const lang of CODES) {
+  buildHome(lang);
+  buildHowItWorks(lang);
+  buildAbout(lang);
+  buildFaq(lang);
+  buildContact(lang);
+  buildPrivacy(lang);
+  buildTerms(lang);
+  buildBlogIndex(lang);
+  buildArticles(lang);
+  pageCount += 8 + ARTICLES.length;
+}
 build404();
 buildSitemap();
-console.log('\\nBuild complete.');
+console.log('Build complete: ' + pageCount + ' localized pages across ' + CODES.length + ' languages + 404 + sitemap + robots.');

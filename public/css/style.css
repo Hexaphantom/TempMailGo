@@ -322,3 +322,60 @@ p{margin:0 0 1em}
   .footer-grid{grid-template-columns:1fr}
   .mail-snippet{display:none}
 }
+
+/* ============ Language switcher ============ */
+.lang-switch{position:relative}
+.lang-switch>summary{
+  list-style:none;cursor:pointer;display:flex;align-items:center;gap:6px;
+  height:42px;padding:0 .7em;border-radius:12px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);font-weight:600;font-size:.9rem;transition:.2s;
+}
+.lang-switch>summary::-webkit-details-marker{display:none}
+.lang-switch>summary:hover{border-color:var(--tmg-blue)}
+.lang-switch .lang-globe{font-size:1rem}
+.lang-switch .lang-cur{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lang-menu{
+  position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:60;
+  width:min(420px,80vw);max-height:340px;overflow:auto;
+  display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:8px;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  box-shadow:0 18px 44px rgba(15,23,42,.18);
+}
+.lang-menu a{
+  color:var(--text-2);font-size:.88rem;font-weight:600;padding:.5em .7em;border-radius:8px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.lang-menu a:hover{color:var(--text);background:var(--surface-2);text-decoration:none}
+.lang-menu a.active{color:#fff;background:linear-gradient(90deg,var(--tmg-cyan),var(--tmg-blue),var(--tmg-violet))}
+[dir="rtl"] .lang-menu{inset-inline-end:auto;inset-inline-start:0}
+
+/* ============ Donation (footer) ============ */
+.donation{
+  margin-bottom:34px;padding:20px 22px;border-radius:16px;
+  background:
+    linear-gradient(var(--surface),var(--surface)) padding-box,
+    linear-gradient(90deg,var(--tmg-cyan),var(--tmg-blue),var(--tmg-violet)) border-box;
+  border:1px solid transparent;
+}
+.donation-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.donation-title{font-weight:800;font-size:1.02rem;color:var(--text)}
+.donation-desc{margin:.35em 0 0;color:var(--text-2);font-size:.9rem;max-width:52ch}
+.donation-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.btn-coffee{
+  display:inline-flex;align-items:center;gap:.4em;font-weight:700;font-size:.9rem;
+  padding:.62em 1.05em;border-radius:12px;white-space:nowrap;
+  color:#3a2a00;background:linear-gradient(90deg,#ffdd55,#ffb800);
+}
+.btn-coffee:hover{filter:brightness(1.05);text-decoration:none}
+.donation-crypto{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:.4em .5em .4em .8em}
+.crypto-label{font-size:.78rem;font-weight:700;color:var(--text-2)}
+.crypto-wallet{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;color:var(--text);
+  max-width:min(46vw,300px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crypto-copy{cursor:pointer;border:none;border-radius:9px;font-weight:700;font-size:.8rem;
+  padding:.5em .85em;color:#fff;background:linear-gradient(90deg,var(--tmg-blue),var(--tmg-violet))}
+.crypto-copy:hover{filter:brightness(1.08)}
+@media(max-width:640px){
+  .donation-inner{flex-direction:column;align-items:flex-start}
+  .lang-menu{grid-template-columns:1fr}
+}

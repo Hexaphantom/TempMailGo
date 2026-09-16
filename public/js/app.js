@@ -2,6 +2,16 @@
 (function () {
   'use strict';
 
+  // i18n: strings injected per-page via window.__TMG_I18N (falls back to English).
+  var I18N = (typeof window !== 'undefined' && window.__TMG_I18N) || {};
+  function t(key, fallback) {
+    return (I18N && Object.prototype.hasOwnProperty.call(I18N, key)) ? I18N[key] : fallback;
+  }
+  function plural(n) {
+    var word = n === 1 ? t('msg_one', 'message') : t('msg_many', 'messages');
+    return n + ' ' + word;
+  }
+
   var state = {
     address: null,
     token: null,
@@ -121,12 +131,12 @@
 
   function renderList() {
     if (!el.list) return;
-    if (el.count) el.count.textContent = state.messages.length + (state.messages.length === 1 ? ' message' : ' messages');
+    if (el.count) el.count.textContent = plural(state.messages.length);
     if (!state.messages.length) {
       el.list.innerHTML =
         '<li class="inbox-empty"><div class="spinner" aria-hidden="true"></div>' +
-        '<h3>Waiting for incoming emails…</h3>' +
-        '<p>Your inbox is live. Send an email or OTP to your address above and it will appear here automatically.</p></li>';
+        '<h3>' + t('empty_h', 'Waiting for incoming emails…') + '</h3>' +
+        '<p>' + t('empty_p', 'Your inbox is live. Send an email or OTP to your address above and it will appear here automatically.') + '</p></li>';
       return;
     }
     el.list.innerHTML = state.messages.map(function (m) {
@@ -148,7 +158,7 @@
     api('/api/inbox?address=' + encodeURIComponent(state.address)).then(function (r) {
       if (r.status === 404) {
         // mailbox expired -> auto-issue a fresh one
-        toast('Inbox expired — generated a new address');
+        toast(t('t_expired', 'Inbox expired — generated a new address'));
         generate();
         return;
       }
@@ -156,7 +166,7 @@
       state.messages = r.body.messages || [];
       state.expiresAt = r.body.expiresAt || state.expiresAt;
       renderList();
-      if (state.messages.length > before) toast('📩 New email received');
+      if (state.messages.length > before) toast(t('t_newmail', '📩 New email received'));
     }).catch(function () {});
   }
 
@@ -206,10 +216,10 @@
   function copyAddress() {
     if (!state.address) return;
     (navigator.clipboard ? navigator.clipboard.writeText(state.address) : Promise.reject())
-      .then(function () { toast('✅ Address copied to clipboard'); })
+      .then(function () { toast(t('t_copied', '✅ Address copied to clipboard')); })
       .catch(function () {
         var ta = document.createElement('textarea'); ta.value = state.address; document.body.appendChild(ta);
-        ta.select(); try { document.execCommand('copy'); toast('✅ Copied'); } catch (e) {} document.body.removeChild(ta);
+        ta.select(); try { document.execCommand('copy'); toast(t('t_copied2', '✅ Copied')); } catch (e) {} document.body.removeChild(ta);
       });
   }
 
@@ -226,17 +236,17 @@
 
   function bind() {
     if (el.copyBtn) el.copyBtn.addEventListener('click', copyAddress);
-    if (el.newBtn) el.newBtn.addEventListener('click', function () { generate({ domain: el.domainSel ? el.domainSel.value : null }); toast('🔄 New address generated'); });
+    if (el.newBtn) el.newBtn.addEventListener('click', function () { generate({ domain: el.domainSel ? el.domainSel.value : null }); toast(t('t_new', '🔄 New address generated')); });
     if (el.createBtn) el.createBtn.addEventListener('click', function () {
       generate({ domain: el.domainSel ? el.domainSel.value : null, username: el.userInput ? el.userInput.value : null });
-      toast('✨ Custom address created');
+      toast(t('t_custom', '✨ Custom address created'));
     });
     if (el.refresh) el.refresh.addEventListener('click', function () {
       el.refresh.classList.add('spin'); poll(); setTimeout(function () { el.refresh.classList.remove('spin'); }, 800);
     });
     if (el.extendBtn) el.extendBtn.addEventListener('click', function () {
       api('/api/extend', { method: 'POST', body: JSON.stringify({ address: state.address }) }).then(function (r) {
-        if (r.ok) { state.expiresAt = r.body.expiresAt; toast('⏱️ Inbox extended'); }
+        if (r.ok) { state.expiresAt = r.body.expiresAt; toast(t('t_extended', '⏱️ Inbox extended')); }
       });
     });
     if (el.qrBtn) el.qrBtn.addEventListener('click', showQr);
@@ -250,7 +260,7 @@
       if (e.target.closest('[data-close-modal]')) { document.querySelectorAll('.modal-backdrop').forEach(function (m) { m.classList.remove('open'); }); }
       if (e.target.id === 'tabHtml') switchTab('html');
       if (e.target.id === 'tabText') switchTab('text');
-      if (e.target.closest('#copyQr')) { $('#qrData').select(); try { document.execCommand('copy'); toast('🔗 Restore link copied'); } catch (e2) {} }
+      if (e.target.closest('#copyQr')) { $('#qrData').select(); try { document.execCommand('copy'); toast(t('t_restore', '🔗 Restore link copied')); } catch (e2) {} }
     });
   }
 
