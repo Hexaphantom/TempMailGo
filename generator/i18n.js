@@ -116,7 +116,8 @@ T.en = {
   foot_notaffil: 'Not affiliated with Gmail, Yahoo, or Outlook.',
   foot_disclaimer: 'TempMailGo is a free disposable email tool intended for protecting your privacy from spam and for testing. Do not use temporary addresses for banking, government, healthcare, or any account you need to keep. Emails are automatically and permanently deleted when the inbox expires.',
   // donation
-  donate_title: 'Support TempMailGo', donate_desc: 'TempMailGo is free and ad-light. If it saved you from spam, a small tip helps keep it running.',
+  donate_btn: 'Donate',
+  donate_title: 'Support TempMailGo', donate_desc: 'TempMailGo is free and ad-light. If it saved you from spam, a small crypto tip helps keep it running.',
   donate_coffee: 'Buy me a coffee', donate_crypto: 'USDT (TRC20)', donate_copy: 'Copy',
   // modals
   modal_html: 'HTML', modal_text: 'Plain text', save_title: 'Save your inbox', save_sub: 'Scan or copy this link to restore this exact address later.', copy_link: 'Copy link',

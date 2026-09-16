@@ -10,7 +10,6 @@ const NAME = 'TempMailGo';
 
 // Donation wallet (placeholder — replace with your own before deploying).
 const USDT_TRC20_WALLET = 'TGjg3Rab4byTwAacdfPXhUr5PXzzpdTZtx';
-const BUYMEACOFFEE_URL = 'https://www.buymeacoffee.com/tempmailgo';
 
 // Nav items: key -> i18n key, href -> clean path (language prefix added at render).
 const NAV = [
@@ -103,6 +102,24 @@ function langSwitcher(lang, cleanPath) {
   </details>`;
 }
 
+// Prominent "Donate" button + popover in the header. Uses the same JS-free
+// <details> pattern as the language switcher so it works everywhere, including
+// mobile, with no extra scripting. Reveals the USDT (TRC20) wallet + copy.
+function donateButton(lang) {
+  return `<details class="donate-pop">
+    <summary class="donate-trigger" aria-label="${tr(lang, 'donate_btn')}"><span class="donate-heart" aria-hidden="true">💜</span><span class="donate-label">${tr(lang, 'donate_btn')}</span></summary>
+    <div class="donate-panel" role="menu">
+      <div class="donate-panel-title">💜 ${tr(lang, 'donate_title')}</div>
+      <p class="donate-panel-desc">${tr(lang, 'donate_desc')}</p>
+      <div class="donate-panel-crypto">
+        <span class="crypto-label">${tr(lang, 'donate_crypto')}</span>
+        <code class="crypto-wallet" id="usdtWallet">${USDT_TRC20_WALLET}</code>
+        <button class="crypto-copy" data-copy-wallet aria-label="${tr(lang, 'donate_copy')}">${tr(lang, 'donate_copy')}</button>
+      </div>
+    </div>
+  </details>`;
+}
+
 function header(active, lang) {
   lang = lang || DEFAULT_LANG;
   const links = NAV.map(n => {
@@ -114,6 +131,7 @@ function header(active, lang) {
     <a class="brand" href="${localizedHref(lang, '/')}">${logoSvg()}<span>Temp<b>Mail</b>Go</span></a>
     <nav class="nav-links" id="navLinks" aria-label="Primary">${links}</nav>
     <div class="nav-tools">
+      ${donateButton(lang)}
       ${langSwitcher(lang, active || '/')}
       <button class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode"><span class="ti">🌙</span></button>
       <button class="nav-toggle" data-nav-toggle aria-label="Open menu">☰</button>
@@ -126,32 +144,11 @@ function adZone(cls, label) {
   return `<aside class="ad-zone ${cls}" aria-label="Advertisement"><span class="ad-label">Advertisement · ${label}</span></aside>`;
 }
 
-// Small, non-intrusive donation section (rendered inside the footer).
-function donation(lang) {
-  return `<div class="donation">
-    <div class="donation-inner">
-      <div class="donation-copy">
-        <span class="donation-title">💜 ${tr(lang, 'donate_title')}</span>
-        <p class="donation-desc">${tr(lang, 'donate_desc')}</p>
-      </div>
-      <div class="donation-actions">
-        <a class="btn-coffee" href="${BUYMEACOFFEE_URL}" target="_blank" rel="noopener nofollow">☕ ${tr(lang, 'donate_coffee')}</a>
-        <div class="donation-crypto">
-          <span class="crypto-label">${tr(lang, 'donate_crypto')}</span>
-          <code class="crypto-wallet" id="usdtWallet">${USDT_TRC20_WALLET}</code>
-          <button class="crypto-copy" data-copy-wallet aria-label="${tr(lang, 'donate_copy')}">${tr(lang, 'donate_copy')}</button>
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-
 function footer(lang) {
   lang = lang || DEFAULT_LANG;
   const L = (p) => localizedHref(lang, p);
   return `<footer class="site-footer">
   <div class="container">
-    ${donation(lang)}
     <div class="footer-grid">
       <div class="footer-brand">
         <a class="brand" href="${L('/')}">${logoSvg()}<span>Temp<b>Mail</b>Go</span></a>
@@ -203,4 +200,4 @@ ${extra || ''}
 </html>`;
 }
 
-module.exports = { SITE, NAME, NAV, head, header, footer, adZone, scripts, logoSvg, donation, localizedHref, USDT_TRC20_WALLET };
+module.exports = { SITE, NAME, NAV, head, header, footer, adZone, scripts, logoSvg, donateButton, localizedHref, USDT_TRC20_WALLET };

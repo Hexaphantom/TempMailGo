@@ -349,33 +349,158 @@ p{margin:0 0 1em}
 .lang-menu a.active{color:#fff;background:linear-gradient(90deg,var(--tmg-cyan),var(--tmg-blue),var(--tmg-violet))}
 [dir="rtl"] .lang-menu{inset-inline-end:auto;inset-inline-start:0}
 
-/* ============ Donation (footer) ============ */
-.donation{
-  margin-bottom:34px;padding:20px 22px;border-radius:16px;
+/* ============ Donation (header button + popover) ============ */
+.donate-pop{position:relative}
+.donate-trigger{
+  list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  height:42px;padding:0 1em;border-radius:12px;border:none;
+  font-weight:800;font-size:.9rem;color:#fff;white-space:nowrap;
+  background:linear-gradient(90deg,var(--tmg-cyan),var(--tmg-blue),var(--tmg-violet));
+  box-shadow:0 8px 22px -8px rgba(76,111,230,.7);transition:transform .15s ease,box-shadow .2s ease;
+}
+.donate-trigger::-webkit-details-marker{display:none}
+.donate-trigger:hover{transform:translateY(-2px)}
+.donate-heart{font-size:1rem;line-height:1}
+.donate-panel{
+  position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:60;
+  width:min(340px,92vw);padding:18px;
+  background:var(--surface);
+  border:1px solid transparent;border-radius:16px;
   background:
     linear-gradient(var(--surface),var(--surface)) padding-box,
     linear-gradient(90deg,var(--tmg-cyan),var(--tmg-blue),var(--tmg-violet)) border-box;
-  border:1px solid transparent;
+  box-shadow:0 18px 44px rgba(15,23,42,.22);
 }
-.donation-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.donation-title{font-weight:800;font-size:1.02rem;color:var(--text)}
-.donation-desc{margin:.35em 0 0;color:var(--text-2);font-size:.9rem;max-width:52ch}
-.donation-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.btn-coffee{
-  display:inline-flex;align-items:center;gap:.4em;font-weight:700;font-size:.9rem;
-  padding:.62em 1.05em;border-radius:12px;white-space:nowrap;
-  color:#3a2a00;background:linear-gradient(90deg,#ffdd55,#ffb800);
-}
-.btn-coffee:hover{filter:brightness(1.05);text-decoration:none}
-.donation-crypto{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-  background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:.4em .5em .4em .8em}
-.crypto-label{font-size:.78rem;font-weight:700;color:var(--text-2)}
+[dir="rtl"] .donate-panel{inset-inline-end:auto;inset-inline-start:0}
+.donate-panel-title{font-weight:800;font-size:1rem;color:var(--text)}
+.donate-panel-desc{margin:.4em 0 .9em;color:var(--text-2);font-size:.86rem;line-height:1.5}
+.donate-panel-crypto{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:.5em .5em .5em .8em}
+.crypto-label{font-size:.72rem;font-weight:800;color:var(--text-2);width:100%;letter-spacing:.04em}
 .crypto-wallet{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.78rem;color:var(--text);
-  max-width:min(46vw,300px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.crypto-copy{cursor:pointer;border:none;border-radius:9px;font-weight:700;font-size:.8rem;
-  padding:.5em .85em;color:#fff;background:linear-gradient(90deg,var(--tmg-blue),var(--tmg-violet))}
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crypto-copy{cursor:pointer;border:none;border-radius:9px;font-weight:700;font-size:.8rem;white-space:nowrap;
+  padding:.5em .9em;color:#fff;background:linear-gradient(90deg,var(--tmg-blue),var(--tmg-violet))}
 .crypto-copy:hover{filter:brightness(1.08)}
 @media(max-width:640px){
-  .donation-inner{flex-direction:column;align-items:flex-start}
   .lang-menu{grid-template-columns:1fr}
+}
+
+/* ============================================================
+   MOBILE RESPONSIVE OVERRIDES
+   These blocks apply ONLY below their breakpoint widths, so the
+   desktop layout above is never affected. They come last in the
+   file so they take precedence over the older mobile rules where
+   the two overlap. Goals: legible text, >=44px tap targets,
+   single-column stacking, no horizontal scroll, comfortable
+   spacing, and a thumb-friendly inbox / FAQ / donation.
+   ============================================================ */
+
+/* ---------- Tablet & small screens ---------- */
+@media(max-width:768px){
+  .container{padding:0 18px}
+
+  /* Comfortable vertical rhythm (desktop spacing is too airy on mobile) */
+  .section{padding:40px 0}
+  .hero{padding:26px 0 8px}
+  .page{padding:32px 0 16px}
+  .site-footer{padding:40px 0 24px}
+  .feature-grid{gap:16px;margin-top:26px}
+  .steps{gap:30px;margin-top:34px}
+  .footer-grid{gap:26px}
+
+  /* >=44px tap targets for every interactive control */
+  .btn{min-height:44px}
+  .btn-sm{min-height:40px}
+  .theme-toggle,.nav-toggle{width:44px;height:44px}
+  .lang-switch>summary{height:44px;padding:0 .8em}
+  .refresh-btn{width:44px;height:44px}
+  .modal-close{width:44px;height:44px}
+  .crypto-copy{min-height:44px;padding:.5em 1em}
+  .donate-trigger{height:44px}
+  .nav-links a{min-height:44px;display:flex;align-items:center}
+  .lang-menu a{min-height:44px;display:flex;align-items:center}
+
+  .mail-card{padding:22px}
+}
+
+/* ---------- Phones ---------- */
+@media(max-width:480px){
+  .container{padding:0 16px}
+
+  /* Tighter, purpose-built spacing for narrow screens */
+  .section{padding:34px 0}
+  .hero{padding:20px 0 6px}
+  .page{padding:26px 0 14px}
+  h2{margin:1.2em 0 .5em}
+  .section-head{margin-bottom:4px}
+  .hero-head p{font-size:1rem}
+  .trust-row{gap:8px 12px}
+
+  /* Email card: stack the address and copy button, full-width & tappable */
+  .mail-card{padding:16px;margin-top:14px}
+  .email-display{flex-direction:column;align-items:stretch;padding:14px}
+  .email-address{min-width:0;width:100%;font-size:1.1rem;text-align:center}
+  .email-display .btn{width:100%}
+  .email-actions{flex-direction:column;gap:10px}
+  .email-actions .btn{width:100%}
+  .email-builder{flex-direction:column;align-items:stretch}
+  .email-builder input,.email-builder select{width:100%;min-width:0}
+  .timer-bar{flex-wrap:wrap}
+
+  /* Inbox list: roomier rows, smaller avatar */
+  .inbox-wrap{margin-top:22px}
+  .inbox-head{padding:14px 16px}
+  .inbox-head h2{font-size:1.02rem}
+  .mail-item{padding:14px 16px;gap:12px}
+  .mail-avatar{width:38px;height:38px;border-radius:10px}
+  .mail-from{font-size:.9rem}
+
+  /* Force single-column stacks */
+  .feature-grid{grid-template-columns:1fr;gap:14px;margin-top:22px}
+  .feature-card{padding:20px}
+  .steps{grid-template-columns:1fr;gap:26px;margin-top:26px}
+  .step{padding:22px 20px}
+  .blog-grid{grid-template-columns:1fr;gap:16px}
+
+  /* FAQ: comfortable padding, keep the +/- affordance clear */
+  .faq{margin-top:18px}
+  .faq summary{padding:16px}
+  .faq details p{padding:0 16px 16px}
+
+  /* Prose tables scroll horizontally instead of breaking the layout */
+  .prose{max-width:100%}
+  .prose table{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* Media never causes horizontal scroll; shorter hero ratio reads better */
+  .article-hero{aspect-ratio:16/9}
+
+  /* Modal fits small screens */
+  .modal-backdrop{padding:16px 10px}
+  .modal-head{padding:16px}
+  .modal-tabs{padding:8px 16px 0}
+  .modal-body{padding:16px;max-height:70vh}
+
+  /* Footer: single column, stacked meta */
+  .site-footer{padding:32px 0 20px}
+  .footer-bottom{flex-direction:column;gap:8px;font-size:.82rem;margin-top:26px;padding-top:18px}
+  .footer-disclaimer{font-size:.8rem}
+
+  /* Donation popover: keep it easy to reach; panel stays on-screen */
+  .donate-trigger{padding:0 .85em}
+  .donate-panel{width:min(300px,92vw);padding:16px}
+  .crypto-wallet{font-size:.78rem}
+
+  /* Header: tighten spacing, hide the language label (globe only) so the
+     Donate button stays visible on the top bar even on small phones */
+  .nav{gap:8px}
+  .lang-switch .lang-cur{display:none}
+  .lang-menu{width:min(320px,92vw)}
+}
+
+/* Very small phones: keep the Donate button prominent but compact */
+@media(max-width:380px){
+  .donate-label{display:none}
+  .donate-trigger{padding:0 .7em}
+  .donate-heart{font-size:1.15rem}
 }
