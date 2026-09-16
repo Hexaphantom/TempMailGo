@@ -1,0 +1,21 @@
+node_modules/
+.env
+*.log
+npm-debug.log*
+.DS_Store
+
+# ---------------------------------------------------------------------------
+# Generated build output. Do NOT commit these — they are produced by
+# `npm run build` (node generator/build.js), which Render/your host runs on
+# every deploy (see render.yaml buildCommand). Source of truth lives in
+# generator/ (layout.js, build.js, i18n.js, translations.js, blog-data.js).
+#
+# This is what keeps the repo small: ~530 localized HTML pages + sitemap +
+# robots are regenerated, not stored.
+# ---------------------------------------------------------------------------
+public/**/*.html
+public/sitemap.xml
+public/robots.txt
+
+# Local zip artifact
+*.zip
