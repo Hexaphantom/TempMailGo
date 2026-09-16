@@ -93,11 +93,13 @@ function logoSvg() {
 
 // Language switcher (crawlable anchor links to the same page in each language).
 function langSwitcher(lang, cleanPath) {
-  const items = CODES.map(c =>
-    `<a href="${localizedHref(c, cleanPath)}"${c === lang ? ' class="active" aria-current="true"' : ''} hreflang="${hreflangOf(c)}" lang="${c}">${langMeta(c).native}</a>`
-  ).join('');
+  const items = CODES.map(c => {
+    const m = langMeta(c);
+    return `<a href="${localizedHref(c, cleanPath)}"${c === lang ? ' class="active" aria-current="true"' : ''} hreflang="${hreflangOf(c)}" lang="${c}"><span class="lang-flag" aria-hidden="true">${m.flag}</span><span class="lang-name">${m.native}</span></a>`;
+  }).join('');
+  const cur = langMeta(lang);
   return `<details class="lang-switch">
-    <summary aria-label="${tr(lang, 'lang_label')}"><span class="lang-globe" aria-hidden="true">🌐</span><span class="lang-cur">${langMeta(lang).native}</span></summary>
+    <summary aria-label="${tr(lang, 'lang_label')}"><span class="lang-flag" aria-hidden="true">${cur.flag}</span><span class="lang-cur">${cur.abbr}</span></summary>
     <div class="lang-menu" role="menu">${items}</div>
   </details>`;
 }

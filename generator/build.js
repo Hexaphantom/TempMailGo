@@ -17,6 +17,8 @@ const fs = require('fs');
 const path = require('path');
 const { SITE, NAME, head, header, footer, adZone, scripts, localizedHref } = require('./layout');
 const { ARTICLES } = require('./blog-data');
+const { SERVICES } = require('./landing-data');
+const { landingTitle, landingDesc, landingKw } = require('./landing-i18n');
 const i18n = require('./i18n');
 const { CODES, DEFAULT_LANG, prefixOf } = i18n;
 const tr = (lang, k) => i18n.tr(lang, k);
@@ -672,6 +674,68 @@ ${footer(lang)}
   });
 }
 
+/* ================= SERVICE LANDING PAGES ================= */
+// One keyword-targeted landing page per service, e.g. /temp-mail-for-chatgpt/.
+// English body content is unique per service; the <title>/<meta> use the correct
+// localized keyword for each language. Additive only — no existing page changes.
+function landingPath(slug) { return '/temp-mail-for-' + slug; }
+
+function buildLanding(lang) {
+  const t = (k) => tr(lang, k);
+  SERVICES.forEach(s => {
+    const p = landingPath(s.slug);
+    const title = landingTitle(lang, s.brand, NAME);
+    const description = landingDesc(lang, s.brand);
+    const kw = landingKw(lang);
+    const keywords = `${kw} ${s.brand}, ${kw}, temp mail for ${s.brand.toLowerCase()}, temporary email ${s.brand.toLowerCase()}, disposable email ${s.brand.toLowerCase()}, ${s.brand} verification email`;
+
+    // Related service cross-links (2-3 siblings).
+    const rel = s.related.map(rs => SERVICES.find(x => x.slug === rs)).filter(Boolean);
+    const relatedCards = rel.map(r =>
+      `<a class="feature-card" href="${localizedHref(lang, landingPath(r.slug))}" style="text-decoration:none">
+        <div class="feature-ico" aria-hidden="true">${I.shield}</div>
+        <h3>Temp Mail for ${r.brand}</h3>
+        <p>${r.category} · ${t('ls_related_p')}</p>
+      </a>`).join('');
+
+    const bodyHtml = `
+<p class="lead">${s.lead}</p>
+
+${s.sections.map(sec => `<h2>${sec.h}</h2>\n<p>${sec.p}</p>`).join('\n\n')}
+
+<div class="callout" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+  <div><strong>${t('ls_cta_h')}</strong> — ${t('ls_cta_p')}</div>
+  <a class="btn btn-primary" href="${localizedHref(lang, '/')}">${t('ls_cta_btn')}</a>
+</div>
+
+<h2>${t('ls_related_h')}</h2>
+<div class="feature-grid">${relatedCards}</div>
+
+<p style="margin-top:1.4em">${t('ls_home_link_pre')} <a href="${localizedHref(lang, '/')}">${t('ls_home_link')}</a> ${t('ls_home_link_post')}</p>
+`;
+
+    const crumb = [{ label: t('nav_inbox'), href: '/' }, { label: 'Temp Mail for ' + s.brand }];
+    const schema = [
+      orgSchema,
+      breadcrumbSchema(lang, [{ label: t('nav_inbox'), href: '/' }, { label: 'Temp Mail for ' + s.brand, href: p }]),
+      {
+        '@context': 'https://schema.org', '@type': 'WebPage',
+        name: title, description, url: SITE + localizedHref(lang, p),
+        isPartOf: { '@type': 'WebSite', name: NAME, url: SITE },
+      },
+    ];
+
+    contentPage(lang, {
+      path: p, title, description, keywords,
+      eyebrow: 'Temp Mail · ' + s.category,
+      h1: `Temp Mail for ${s.brand}`,
+      breadcrumb: crumbLang(lang, crumb),
+      schema,
+      bodyHtml,
+    });
+  });
+}
+
 /* ================= 404 ================= */
 function build404() {
   // Single English 404 at the root (served for unknown paths in any language).
@@ -701,6 +765,7 @@ const ROUTES = [
   { loc: '/terms', pri: '0.4', freq: 'yearly' },
   { loc: '/blog', pri: '0.9', freq: 'weekly' },
   ...ARTICLES.map(a => ({ loc: '/blog/' + a.slug, pri: '0.7', freq: 'monthly', lastmod: a.date })),
+  ...SERVICES.map(s => ({ loc: '/temp-mail-for-' + s.slug, pri: '0.7', freq: 'monthly' })),
 ];
 
 function buildSitemap() {
@@ -750,7 +815,8 @@ for (const lang of CODES) {
   buildTerms(lang);
   buildBlogIndex(lang);
   buildArticles(lang);
-  pageCount += 8 + ARTICLES.length;
+  buildLanding(lang);
+  pageCount += 8 + ARTICLES.length + SERVICES.length;
 }
 build404();
 buildSitemap();

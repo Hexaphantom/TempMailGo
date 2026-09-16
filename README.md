@@ -1,10 +1,10 @@
-# TempMailGo — Free Disposable Temporary Email (4 real providers)
+# TempMailGo — Free Disposable Temporary Email (5 real providers)
 
 An instant, no-signup temporary inbox that receives **real** emails and OTP codes,
 plus a full SEO- and AdSense-ready content site (blog, About, How It Works, FAQ,
 Privacy, Terms, Contact).
 
-Mail delivery is powered by **four free public APIs**, each verified end-to-end to
+Mail delivery is powered by **five free public APIs**, each verified end-to-end to
 receive real external OTP email:
 
 | Provider | Domains | Auth | Notes |
@@ -13,6 +13,17 @@ receive real external OTP email:
 | **[DropMail](https://dropmail.me/api/)** | `@dropmail.me`, `@10mail.org`, … | free `af_` token (auto) | GraphQL + real-time WebSocket |
 | **[Mailinator](https://www.mailinator.com)** | `@mailinator.com` | none | **public** inboxes, no create step |
 | **[Guerrilla Mail](https://www.guerrillamail.com/GuerrillaMailAPI.html)** | `@guerrillamailblock.com` | none | one domain from a server IP |
+| **[tempmail.lol](https://tempmail.lol)** | rotating (`@26ai.art`, `@imagesthere.com`, …) | none | **random** address on fresh, rarely-blocklisted domains |
+
+> **⚠ tempmail.lol specifics.** Its free API (1) assigns a **random** address on a
+> rotating domain — the custom-username box is ignored for this provider (the UI
+> handles that gracefully); (2) **drains messages on read** (each mail is returned
+> by the API only once), so `src/tempmaillol.js` keeps a small per-token in-memory
+> cache and merges newly delivered mail into it, making the inbox behave like the
+> others; (3) enforces a **~15 requests / 60 s per-IP** limit shared across inbox
+> creation and polling — if you get heavy traffic from a single server IP you may
+> see `429`s (the site simply falls back to the other providers). The client
+> retries transient `429`/`5xx` automatically.
 
 You do **not** need to own any domains, configure MX records, or run a mail server.
 The providers own their domains and mail infrastructure; TempMailGo calls their APIs

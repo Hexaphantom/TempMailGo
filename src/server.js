@@ -29,6 +29,7 @@ const mailtm = require('./mailtm');
 const guerrilla = require('./guerrilla');
 const mailinator = require('./mailinator');
 const dropmail = require('./dropmail');
+const tempmaillol = require('./tempmaillol');
 const { stripHtml, extractOtp } = require('./store');
 
 const app = express();
@@ -61,6 +62,7 @@ function providerForToken(token) {
   if (t.startsWith('g:')) return 'guerrilla';
   if (t.startsWith('mi:')) return 'mailinator';
   if (t.startsWith('d:')) return 'dropmail';
+  if (t.startsWith('t:')) return 'tempmaillol';
   return 'mailtm';
 }
 // Mailinator token just wraps the username (no server auth needed).
@@ -74,16 +76,23 @@ function readDropmailToken(token) {
   try { return JSON.parse(Buffer.from(String(token).slice(2), 'base64url').toString()); }
   catch (_) { return null; }
 }
+// tempmail.lol token just wraps its opaque API token behind a "t:" prefix.
+function makeTempmaillolToken(apiToken) { return 't:' + apiToken; }
+function readTempmaillolToken(token) { return String(token || '').slice(2); }
 
 // ---- domain catalog (all providers), cached ----
 const GUERRILLA_DOMAIN = 'guerrillamailblock.com';
 const MAILINATOR_DOMAIN = 'mailinator.com';
+// tempmail.lol hands out random rotating domains (you can't pre-pick one), so
+// we expose a single friendly menu label that routes to that provider.
+const TEMPMAILLOL_DOMAIN = 'tempmail.lol';
 // which provider owns a given domain string
 const dropmailDomains = new Set(); // filled from DropMail's live domain list
 function providerForDomain(d) {
   const dom = String(d || '').toLowerCase();
   if (dom === GUERRILLA_DOMAIN) return 'guerrilla';
   if (dom === MAILINATOR_DOMAIN) return 'mailinator';
+  if (dom === TEMPMAILLOL_DOMAIN) return 'tempmaillol';
   if (dropmailDomains.has(dom)) return 'dropmail';
   return 'mailtm';
 }
@@ -102,6 +111,7 @@ async function getDomainCatalog() {
   // Order: mail.tm domains, a few DropMail domains, Mailinator, Guerrilla.
   const set = new Set(mt);
   for (const d of _dropmailDomainMeta.slice(0, 6)) set.add(d.name);
+  set.add(TEMPMAILLOL_DOMAIN);
   set.add(MAILINATOR_DOMAIN);
   set.add(GUERRILLA_DOMAIN);
   const list = Array.from(set);
@@ -263,6 +273,43 @@ function dmFullMessage(m, address) {
   };
 }
 
+// ---- mappers: tempmail.lol ----
+function tlListItem(m) {
+  const subject = m.subject || '(no subject)';
+  const text = m.body || '';
+  const html = m.html || '';
+  return {
+    id: m._id,
+    from: m.from || 'unknown@sender',
+    fromName: '',
+    subject,
+    snippet: (text || stripHtml(html)).slice(0, 140),
+    otp: extractOtp(subject, text, html),
+    hasAttachments: Array.isArray(m.attachment_urls) && m.attachment_urls.length > 0,
+    receivedAt: m.date ? Number(m.date) : (m.createdAt ? new Date(m.createdAt).getTime() : Date.now()),
+  };
+}
+function tlFullMessage(m, address) {
+  const subject = m.subject || '(no subject)';
+  const text = m.body || '';
+  const html = m.html || '';
+  return {
+    id: m._id,
+    from: m.from || 'unknown@sender',
+    fromName: '',
+    to: address || m.to || '',
+    subject, text, html,
+    snippet: (text || stripHtml(html)).slice(0, 140),
+    otp: extractOtp(subject, text, html),
+    attachments: (m.attachment_urls || []).map((u) => ({
+      filename: String(u).split('/').pop() || 'attachment',
+      contentType: 'application/octet-stream',
+      size: 0,
+    })),
+    receivedAt: m.date ? Number(m.date) : (m.createdAt ? new Date(m.createdAt).getTime() : Date.now()),
+  };
+}
+
 // ================= API =================
 
 app.get('/api/domains', async (_req, res) => {
@@ -310,6 +357,15 @@ app.post('/api/generate', async (req, res) => {
     const token = makeDropmailToken(dm.sessionId, dm.afToken);
     rememberSession({ address: dm.address, token, provider: 'dropmail', createdAt: now0, expiresAt: now0 + DEFAULT_TTL_MS });
     return res.json({ address: dm.address, token, provider: 'dropmail', restoreKey: dm.restoreKey, createdAt: now0, expiresAt: now0 + DEFAULT_TTL_MS, ttlMs: DEFAULT_TTL_MS });
+  }
+
+  // -------- tempmail.lol path (random rotating domains) --------
+  if (provider === 'tempmaillol') {
+    const tl = await tempmaillol.create();
+    if (!tl.ok || !tl.address) return res.status(502).json({ error: 'tempmaillol_error', message: 'Could not create a tempmail.lol inbox, try another domain.' });
+    const token = makeTempmaillolToken(tl.token);
+    rememberSession({ address: tl.address, token, provider: 'tempmaillol', createdAt: now0, expiresAt: now0 + DEFAULT_TTL_MS });
+    return res.json({ address: tl.address, token, provider: 'tempmaillol', createdAt: now0, expiresAt: now0 + DEFAULT_TTL_MS, ttlMs: DEFAULT_TTL_MS });
   }
 
   // -------- mail.tm path --------
@@ -370,6 +426,14 @@ app.get('/api/inbox', async (req, res) => {
     return res.json({ address, expiresAt, count: messages.length, messages });
   }
 
+  if (provider === 'tempmaillol') {
+    const r = await tempmaillol.listMessages(readTempmaillolToken(token));
+    if (!r.ok) return res.status(502).json({ error: 'tempmaillol_error', messages: [] });
+    if (r.expired) return res.status(404).json({ error: 'mailbox_expired', messages: [] });
+    const messages = r.messages.map(tlListItem);
+    return res.json({ address, expiresAt, count: messages.length, messages });
+  }
+
   const r = await mailtm.listMessages(token);
   if (!r.ok) {
     if (r.status === 401) return res.status(404).json({ error: 'mailbox_expired', messages: [] });
@@ -406,6 +470,12 @@ app.get('/api/message', async (req, res) => {
     const r = await dropmail.getMessage(t.s, id, t.t);
     if (!r.ok) return res.status(404).json({ error: 'not_found' });
     return res.json(dmFullMessage(r.message, address));
+  }
+
+  if (provider === 'tempmaillol') {
+    const r = await tempmaillol.getMessage(readTempmaillolToken(token), id);
+    if (!r.ok) return res.status(404).json({ error: 'not_found' });
+    return res.json(tlFullMessage(r.message, address));
   }
 
   const r = await mailtm.getMessage(token, id);
@@ -459,7 +529,7 @@ app.get('/api/qr', (req, res) => {
 
 app.get('/api/health', async (_req, res) => {
   const domains = await getDomainCatalog();
-  res.json({ ok: true, providers: ['mail.tm', 'guerrillamail', 'mailinator', 'dropmail'], domains: domains.length, sessions: sessions.size, time: Date.now() });
+  res.json({ ok: true, providers: ['mail.tm', 'guerrillamail', 'mailinator', 'dropmail', 'tempmail.lol'], domains: domains.length, sessions: sessions.size, time: Date.now() });
 });
 
 // ---------- static + page routing ----------
@@ -471,5 +541,5 @@ app.use((req, res, next) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`TempMailGo (mail.tm + DropMail + Mailinator + Guerrilla) listening on http://0.0.0.0:${PORT}`);
+  console.log(`TempMailGo (mail.tm + DropMail + Mailinator + Guerrilla + tempmail.lol) listening on http://0.0.0.0:${PORT}`);
 });

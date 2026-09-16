@@ -333,7 +333,8 @@ p{margin:0 0 1em}
 .lang-switch>summary::-webkit-details-marker{display:none}
 .lang-switch>summary:hover{border-color:var(--tmg-blue)}
 .lang-switch .lang-globe{font-size:1rem}
-.lang-switch .lang-cur{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lang-switch .lang-flag{font-size:1.05rem;line-height:1}
+.lang-switch .lang-cur{font-weight:700;letter-spacing:.02em}
 .lang-menu{
   position:absolute;top:calc(100% + 8px);inset-inline-end:0;z-index:60;
   width:min(420px,80vw);max-height:340px;overflow:auto;
@@ -342,9 +343,12 @@ p{margin:0 0 1em}
   box-shadow:0 18px 44px rgba(15,23,42,.18);
 }
 .lang-menu a{
+  display:flex;align-items:center;gap:8px;
   color:var(--text-2);font-size:.88rem;font-weight:600;padding:.5em .7em;border-radius:8px;white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis;
 }
+.lang-menu .lang-flag{font-size:1.05rem;line-height:1;flex:0 0 auto}
+.lang-menu .lang-name{overflow:hidden;text-overflow:ellipsis}
 .lang-menu a:hover{color:var(--text);background:var(--surface-2);text-decoration:none}
 .lang-menu a.active{color:#fff;background:linear-gradient(90deg,var(--tmg-cyan),var(--tmg-blue),var(--tmg-violet))}
 [dir="rtl"] .lang-menu{inset-inline-end:auto;inset-inline-start:0}
@@ -507,10 +511,17 @@ p{margin:0 0 1em}
   .brand span{display:none}
   .brand .brand-logo,.site-header .brand-logo{width:64px;height:36px}
 
-  /* Language: globe-only, square 44px tap target */
-  .lang-switch .lang-cur{display:none}
-  .lang-switch>summary{width:44px;padding:0;justify-content:center}
-  .lang-menu{width:min(320px,92vw)}
+  /* Language: compact flag + short code (e.g. 🇬🇧 ENG), like temp-mail.org.
+     The dropdown becomes a centered, contained sheet so it never overflows
+     the side of the screen. */
+  .lang-switch>summary{height:44px;padding:0 .55em;gap:4px}
+  .lang-switch .lang-cur{font-size:.82rem}
+  .lang-menu,[dir="rtl"] .lang-menu{
+    position:fixed;top:76px;inset-inline:auto;left:50%;right:auto;
+    transform:translateX(-50%);
+    width:min(300px,92vw);max-height:70vh;
+    grid-template-columns:1fr;
+  }
 
   /* Donate: compact square icon button — still prominent (gradient) and it
      still opens the wallet popover; the label is hidden to save the top bar */
