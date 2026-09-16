@@ -422,6 +422,14 @@ p{margin:0 0 1em}
   .lang-menu a{min-height:44px;display:flex;align-items:center}
 
   .mail-card{padding:22px}
+
+  /* Header must never overlap the brand: let the brand shrink/ellipsize and
+     keep the control cluster from shrinking, so items reflow instead of
+     stacking on top of the logo. */
+  .nav{gap:8px}
+  .nav-tools{flex-shrink:0}
+  .brand{min-width:0;flex-shrink:1}
+  .brand span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
 
 /* ---------- Phones ---------- */
@@ -436,6 +444,10 @@ p{margin:0 0 1em}
   .section-head{margin-bottom:4px}
   .hero-head p{font-size:1rem}
   .trust-row{gap:8px 12px}
+
+  /* Constrain button icons: SVGs w/o intrinsic size balloon in a full-width
+     flex button on phones — pin them so the label stays readable */
+  .btn svg{width:18px;height:18px;flex:0 0 auto}
 
   /* Email card: stack the address and copy button, full-width & tappable */
   .mail-card{padding:16px;margin-top:14px}
@@ -486,21 +498,39 @@ p{margin:0 0 1em}
   .footer-bottom{flex-direction:column;gap:8px;font-size:.82rem;margin-top:26px;padding-top:18px}
   .footer-disclaimer{font-size:.8rem}
 
-  /* Donation popover: keep it easy to reach; panel stays on-screen */
-  .donate-trigger{padding:0 .85em}
-  .donate-panel{width:min(300px,92vw);padding:16px}
-  .crypto-wallet{font-size:.78rem}
+  /* --- Header: make the top bar fit without crowding the brand ---
+     With four controls in the cluster there isn't room for the wordmark on a
+     phone, so show the (distinctive) logo only and let the icons breathe. */
+  .nav{gap:6px}
+  .nav-tools{gap:6px;flex-shrink:0}
+  .brand{min-width:0;flex-shrink:0}
+  .brand span{display:none}
+  .brand .brand-logo,.site-header .brand-logo{width:64px;height:36px}
 
-  /* Header: tighten spacing, hide the language label (globe only) so the
-     Donate button stays visible on the top bar even on small phones */
-  .nav{gap:8px}
+  /* Language: globe-only, square 44px tap target */
   .lang-switch .lang-cur{display:none}
+  .lang-switch>summary{width:44px;padding:0;justify-content:center}
   .lang-menu{width:min(320px,92vw)}
+
+  /* Donate: compact square icon button — still prominent (gradient) and it
+     still opens the wallet popover; the label is hidden to save the top bar */
+  .donate-label{display:none}
+  .donate-trigger{width:44px;padding:0;gap:0;justify-content:center}
+  .donate-heart{font-size:1.25rem}
+
+  /* Popover: the Donate button sits at the left of the right-hand control
+     cluster, so a right-anchored panel would run off the left edge. Pin it
+     as a fixed, centered sheet under the header — always fully on-screen. */
+  .donate-panel,[dir="rtl"] .donate-panel{
+    position:fixed;top:76px;inset-inline:auto;left:50%;right:auto;
+    transform:translateX(-50%);
+    width:min(340px,92vw);padding:16px;
+  }
+  .crypto-wallet{font-size:.78rem}
 }
 
-/* Very small phones: keep the Donate button prominent but compact */
-@media(max-width:380px){
-  .donate-label{display:none}
-  .donate-trigger{padding:0 .7em}
-  .donate-heart{font-size:1.15rem}
+/* Ultra-small phones: tighten the control cluster a touch more */
+@media(max-width:360px){
+  .nav{gap:4px}
+  .nav-tools{gap:4px}
 }
