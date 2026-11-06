@@ -736,6 +736,70 @@ ${s.sections.map(sec => `<h2>${sec.h}</h2>\n<p>${sec.p}</p>`).join('\n\n')}
   });
 }
 
+/* ================= SERVICES HUB ================= */
+// /temp-mail-for — one page that links to every service landing page. It gives
+// crawlers a direct internal-link path to all of them (it is linked from the
+// footer on every page) and gives visitors a browsable index.
+const HUB_GROUPS = [
+  { label: 'AI video tools',             test: c => /AI/.test(c) && /video/i.test(c) },
+  { label: 'AI image tools',             test: c => /AI/.test(c) && /image/i.test(c) },
+  { label: 'AI assistants & builders',   test: c => /^AI/.test(c) },
+  { label: 'Creative & design software', test: c => /software|Video editing/i.test(c) },
+  { label: 'Streaming & entertainment',  test: c => /Streaming/.test(c) },
+  { label: 'Social, chat & gaming',      test: c => /Social|Community|Messaging|Gaming/.test(c) },
+];
+
+function buildServicesHub(lang) {
+  const t = (k) => tr(lang, k);
+  const p = '/temp-mail-for';
+  const year = new Date().getFullYear();
+  const title = `${t('hub_title')} (${year}) — ${NAME}`;
+  const description = t('hub_desc').replace('{n}', SERVICES.length);
+
+  const buckets = HUB_GROUPS.map(g => ({ label: g.label, items: [] }));
+  const other = { label: 'More services', items: [] };
+  SERVICES.forEach(s => {
+    const i = HUB_GROUPS.findIndex(g => g.test(s.category));
+    (i >= 0 ? buckets[i] : other).items.push(s);
+  });
+  const sections = buckets.concat(other).filter(b => b.items.length).map(b => {
+    const cards = b.items.map(s =>
+      `<a class="feature-card" href="${localizedHref(lang, landingPath(s.slug))}" style="text-decoration:none">
+        <div class="feature-ico" aria-hidden="true">${I.shield}</div>
+        <h3>Temp Mail for ${s.brand}</h3>
+        <p>${s.category}</p>
+      </a>`).join('');
+    return `<h2>${b.label}</h2>\n<div class="feature-grid">${cards}</div>`;
+  }).join('\n\n');
+
+  const bodyHtml = `
+<p class="lead">${t('hub_intro')}</p>
+<p>${t('hub_note')}</p>
+
+${sections}
+
+<p style="margin-top:1.4em">${t('ls_home_link_pre')} <a href="${localizedHref(lang, '/')}">${t('ls_home_link')}</a> ${t('ls_home_link_post')}</p>
+`;
+
+  contentPage(lang, {
+    path: p, title, description,
+    keywords: 'temp mail for apps, temp mail for AI tools, disposable email for sign up, temporary email for verification',
+    eyebrow: 'Temp Mail · ' + SERVICES.length + ' guides',
+    h1: t('hub_title'),
+    breadcrumb: crumbLang(lang, [{ label: t('nav_inbox'), href: '/' }, { label: t('hub_title') }]),
+    schema: [
+      orgSchema,
+      breadcrumbSchema(lang, [{ label: t('nav_inbox'), href: '/' }, { label: t('hub_title'), href: p }]),
+      {
+        '@context': 'https://schema.org', '@type': 'CollectionPage',
+        name: title, description, url: SITE + localizedHref(lang, p),
+        isPartOf: { '@type': 'WebSite', name: NAME, url: SITE },
+      },
+    ],
+    bodyHtml,
+  });
+}
+
 /* ================= 404 ================= */
 function build404() {
   // Single English 404 at the root (served for unknown paths in any language).
@@ -764,6 +828,7 @@ const ROUTES = [
   { loc: '/privacy', pri: '0.4', freq: 'yearly' },
   { loc: '/terms', pri: '0.4', freq: 'yearly' },
   { loc: '/blog', pri: '0.9', freq: 'weekly' },
+  { loc: '/temp-mail-for', pri: '0.8', freq: 'weekly' },
   ...ARTICLES.map(a => ({ loc: '/blog/' + a.slug, pri: '0.7', freq: 'monthly', lastmod: a.date })),
   ...SERVICES.map(s => ({ loc: '/temp-mail-for-' + s.slug, pri: '0.7', freq: 'monthly' })),
 ];
@@ -816,7 +881,8 @@ for (const lang of CODES) {
   buildBlogIndex(lang);
   buildArticles(lang);
   buildLanding(lang);
-  pageCount += 8 + ARTICLES.length + SERVICES.length;
+  buildServicesHub(lang);
+  pageCount += 9 + ARTICLES.length + SERVICES.length;
 }
 build404();
 buildSitemap();

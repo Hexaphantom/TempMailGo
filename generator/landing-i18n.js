@@ -58,7 +58,8 @@ function landingTitle(lang, service, brand) {
   const phrase = d.order === 'post'
     ? `${service} ${d.conn} ${d.kw}`
     : `${cap(d.kw)} ${d.conn} ${service}`;
-  return `${phrase} — ${brand}`;
+  // Year is computed at build time so titles stay current on each deploy.
+  return `${phrase} (${new Date().getFullYear()}) — ${brand}`;
 }
 
 // Build a localized meta description for a service landing page.

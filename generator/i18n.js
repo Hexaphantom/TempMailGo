@@ -123,6 +123,12 @@ T.en = {
   foot_l_blog: 'Blog', foot_l_howblog: 'How Temp Mail Works', foot_l_safe: 'Is Temp Mail Safe?', foot_l_vs: 'Temp Mail vs Guerrilla Mail',
   foot_l_about: 'About', foot_l_contact: 'Contact', foot_l_privacy: 'Privacy Policy', foot_l_terms: 'Terms of Service',
   foot_rights: 'All rights reserved.',
+  foot_l_services: 'Temp Mail for Popular Services',
+  // services hub page (/temp-mail-for) — English; other languages fall back to this
+  hub_title: 'Temp Mail for Popular Services',
+  hub_desc: 'Free temp mail guides for {n} popular services — AI video and image tools like Kling AI, Higgsfield and Wan AI, chat assistants, streaming, social apps and more. Instant disposable inbox, no signup.',
+  hub_intro: 'Signing up for a new app usually means handing over your real email address and receiving marketing for years afterward. These guides explain how a free disposable inbox helps with each service: it receives the verification email, keeps promotional mail away from your personal address, and deletes itself when it expires.',
+  hub_note: 'A quick note: some services refuse disposable domains, and an account created with a temporary address cannot be recovered after the inbox expires. For anything you want to keep, use a permanent email address you control.',
   foot_powered: 'Mail delivery powered by',
   foot_notaffil: 'Not affiliated with Gmail, Yahoo, or Outlook.',
   foot_disclaimer: 'TempMailGo is a free disposable email tool intended for protecting your privacy from spam and for testing. Do not use temporary addresses for banking, government, healthcare, or any account you need to keep. Emails are automatically and permanently deleted when the inbox expires.',
