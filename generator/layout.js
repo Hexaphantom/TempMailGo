@@ -122,6 +122,7 @@ function donateButton(lang) {
         <code class="crypto-wallet" id="usdtWallet">${USDT_TRC20_WALLET}</code>
         <button class="crypto-copy" data-copy-wallet aria-label="${tr(lang, 'donate_copy')}">${tr(lang, 'donate_copy')}</button>
       </div>
+      <p class="donate-panel-warn">⚠️ ${tr(lang, 'donate_network_note')}</p>
       <div class="donate-panel-paypal">
         <span class="crypto-label">${tr(lang, 'donate_paypal')}</span>
         <div id="paypal-container-${PAYPAL_HOSTED_BUTTON_ID}"></div>

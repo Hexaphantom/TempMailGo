@@ -129,7 +129,8 @@ T.en = {
   // donation
   donate_btn: 'Donate',
   donate_title: 'Support TempMailGo', donate_desc: 'TempMailGo is free and ad-light. If it saved you from spam, a small tip — crypto or PayPal — helps keep it running.',
-  donate_coffee: 'Buy me a coffee', donate_crypto: 'USDT (TRC20)', donate_copy: 'Copy', donate_paypal: 'PAYPAL / CARD',
+  donate_coffee: 'Buy me a coffee', donate_crypto: 'USDT · TRON (TRC20)', donate_copy: 'Copy', donate_paypal: 'PAYPAL / CARD',
+  donate_network_note: 'Send only USDT on the TRON network (TRC20). Funds sent on any other network (ERC20, BEP20, etc.) will be lost.',
   // modals
   modal_html: 'HTML', modal_text: 'Plain text', save_title: 'Save your inbox', save_sub: 'Scan or copy this link to restore this exact address later.', copy_link: 'Copy link',
   // app toasts (used by app.js via window.__TMG_I18N)
