@@ -8,8 +8,12 @@ const tr = (lang, k) => i18n.tr(lang, k);
 const SITE = 'https://freetempmailgo.xyz';
 const NAME = 'TempMailGo';
 
-// Donation wallet (placeholder — replace with your own before deploying).
-const USDT_TRC20_WALLET = 'TGjg3Rab4byTwAacdfPXhUr5PXzzpdTZtx';
+// Donation wallet (USDT on the TRON network, TRC20).
+const USDT_TRC20_WALLET = 'TWDZ9Gdh6rgrmZHFz39wBdvsiM7tC1jPsp';
+
+// PayPal hosted donate button (created in the PayPal dashboard). The SDK is
+// loaded lazily from /js/common.js the first time the Donate panel is opened.
+const PAYPAL_HOSTED_BUTTON_ID = 'YXR6CZT9Q9YY4';
 
 // Nav items: key -> i18n key, href -> clean path (language prefix added at render).
 const NAV = [
@@ -117,6 +121,11 @@ function donateButton(lang) {
         <span class="crypto-label">${tr(lang, 'donate_crypto')}</span>
         <code class="crypto-wallet" id="usdtWallet">${USDT_TRC20_WALLET}</code>
         <button class="crypto-copy" data-copy-wallet aria-label="${tr(lang, 'donate_copy')}">${tr(lang, 'donate_copy')}</button>
+      </div>
+      <p class="donate-panel-warn">⚠️ ${tr(lang, 'donate_network_note')}</p>
+      <div class="donate-panel-paypal">
+        <span class="crypto-label">${tr(lang, 'donate_paypal')}</span>
+        <div id="paypal-container-${PAYPAL_HOSTED_BUTTON_ID}"></div>
       </div>
     </div>
   </details>`;
