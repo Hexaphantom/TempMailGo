@@ -43,6 +43,35 @@
     document.body.removeChild(ta);
   }
 
+  // Donation: PayPal hosted button. The SDK is only loaded the first time the
+  // Donate panel is opened, so normal page loads stay fast and PayPal sets no
+  // cookies for visitors who never open it.
+  var PAYPAL_BUTTON_ID = 'YXR6CZT9Q9YY4';
+  var PAYPAL_SDK = 'https://www.paypal.com/sdk/js?client-id=BAAlZNAAtkyiMzvo8mS6lmnKD1VltcxQdxKf06N9uhBGPZvGR3O-an8WOYdYTwAQjEOkDv8ltr5K__lTUA&components=hosted-buttons&disable-funding=venmo&currency=USD';
+  var paypalStarted = false;
+
+  function renderPaypal() {
+    try {
+      var p = window.paypal.HostedButtons({ hostedButtonId: PAYPAL_BUTTON_ID })
+        .render('#paypal-container-' + PAYPAL_BUTTON_ID);
+      if (p && p.catch) p.catch(function () { paypalStarted = false; });
+    } catch (e) { paypalStarted = false; }
+  }
+
+  function loadPaypal() {
+    if (paypalStarted) return;
+    if (!document.getElementById('paypal-container-' + PAYPAL_BUTTON_ID)) return;
+    paypalStarted = true;
+    if (window.paypal && window.paypal.HostedButtons) { renderPaypal(); return; }
+    var s = document.createElement('script');
+    s.src = PAYPAL_SDK;
+    s.crossOrigin = 'anonymous';
+    s.async = true;
+    s.onload = renderPaypal;
+    s.onerror = function () { paypalStarted = false; };
+    document.head.appendChild(s);
+  }
+
   function showToast(msg) {
     var el = document.getElementById('toast');
     if (!el) { return; }
@@ -57,6 +86,9 @@
     if (ic) ic.textContent = root.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙';
     var y = document.getElementById('year');
     if (y) y.textContent = new Date().getFullYear();
+    // load the PayPal button when the Donate panel is first opened
+    var dp = document.querySelector('.donate-pop');
+    if (dp) dp.addEventListener('toggle', function () { if (dp.open) loadPaypal(); });
     // mark active nav link
     var here = location.pathname.replace(/\/$/, '') || '/';
     document.querySelectorAll('.nav-links a').forEach(function (a) {

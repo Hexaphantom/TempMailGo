@@ -386,6 +386,9 @@ p{margin:0 0 1em}
 .crypto-copy{cursor:pointer;border:none;border-radius:9px;font-weight:700;font-size:.8rem;white-space:nowrap;
   padding:.5em .9em;color:#fff;background:linear-gradient(90deg,var(--tmg-blue),var(--tmg-violet))}
 .crypto-copy:hover{filter:brightness(1.08)}
+.donate-panel-paypal{margin-top:12px;padding:.6em .8em .8em;min-height:90px;
+  background:var(--surface-2);border:1px solid var(--border);border-radius:12px}
+.donate-panel-paypal .crypto-label{display:block;margin-bottom:8px}
 @media(max-width:640px){
   .lang-menu{grid-template-columns:1fr}
 }
@@ -536,6 +539,7 @@ p{margin:0 0 1em}
     position:fixed;top:76px;inset-inline:auto;left:50%;right:auto;
     transform:translateX(-50%);
     width:min(340px,92vw);padding:16px;
+    max-height:calc(100vh - 96px);overflow-y:auto;
   }
   .crypto-wallet{font-size:.78rem}
 }
