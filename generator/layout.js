@@ -170,6 +170,7 @@ function footer(lang) {
       <div class="footer-col">
         <h4>${tr(lang, 'foot_resources')}</h4>
         <a href="${L('/blog')}">${tr(lang, 'foot_l_blog')}</a>
+        <a href="${L('/temp-mail-for')}">${tr(lang, 'foot_l_services')}</a>
         <a href="${L('/blog/how-does-temp-mail-work')}">${tr(lang, 'foot_l_howblog')}</a>
         <a href="${L('/blog/is-temp-mail-safe')}">${tr(lang, 'foot_l_safe')}</a>
         <a href="${L('/blog/temp-mail-vs-guerrilla-mail')}">${tr(lang, 'foot_l_vs')}</a>

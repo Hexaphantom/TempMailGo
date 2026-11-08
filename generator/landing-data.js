@@ -237,6 +237,168 @@ const SERVICES = [
       { h: 'How to use temp mail with Canva', p: `Open the TempMailGo homepage, copy the instantly generated address, and paste it into the sign-up form. The confirmation email appears in the live inbox in seconds, any code highlighted for easy copying. Please use the service under its own terms.` },
     ],
   },
+
+  /* ---------- Added: more AI video / image / assistant / builder tools ---------- */
+  {
+    slug: 'wan-ai', brand: 'Wan AI', category: 'AI video generation',
+    related: ['kling-ai', 'higgsfield', 'runway'],
+    lead: `Wan AI is one of the newer names in AI video generation, and new tools tend to be generous with launch announcements, model updates, and community invitations. A temporary email lets you complete sign-up and get your verification code without adding your everyday address to yet another fast-growing mailing list.`,
+    sections: [
+      { h: 'Model updates without the inbox flood', p: `AI video models are updated constantly, and every release usually triggers an email. Receiving those at a disposable address means you can check out the newest version when you want to, instead of having announcements pile up in the mailbox you rely on for work and family.` },
+      { h: 'Keep your experiments separate from your identity', p: `Prompts and reference clips can reveal personal projects, clients, or ideas that are not ready to share. Signing up with a random, log-free address keeps early experimentation detached from the email that is tied to the rest of your online life.` },
+      { h: 'Getting your Wan AI verification code', p: `Copy the address from the TempMailGo homepage, paste it into the sign-up form, and wait for the confirmation message to appear in the live inbox. If the form refuses a disposable domain, switch to a different domain and try again. Please follow the service's own terms of use.` },
+    ],
+  },
+  {
+    slug: 'pika', brand: 'Pika', category: 'AI video generation',
+    related: ['luma-ai', 'runway', 'kling-ai'],
+    lead: `Pika turns short prompts and images into stylized video clips, and creative tools like it love a good onboarding sequence: tips, templates, and trend roundups. A disposable email address gets you through registration while keeping that stream of creative nudges out of your main inbox.`,
+    sections: [
+      { h: 'Templates and trends, on your schedule', p: `Short-form video tools thrive on trends, so their emails can be frequent. If the address on file is temporary, you can open the app when inspiration strikes rather than being pulled in by every "what's trending" message in your personal mailbox.` },
+      { h: 'Protect the ideas you are still shaping', p: `Early creative drafts are personal. Registering with an anonymous temporary address means your first experiments are not linked to the email you use for your real name, your portfolio, or your clients.` },
+      { h: 'Using temp mail with Pika', p: `Generate an address on TempMailGo, use it in the sign-up form, and watch the live inbox for the confirmation link or code. Because inboxes expire automatically, there is nothing to clean up afterward. Use the service according to its own rules.` },
+    ],
+  },
+  {
+    slug: 'luma-ai', brand: 'Luma AI', category: 'AI video generation',
+    related: ['pika', 'runway', 'sora'],
+    lead: `Luma AI covers 3D capture and AI video, and creators who try it often end up on product-update and partner lists. Using a temporary email for the first look keeps those lists away from the address you actually read every day.`,
+    sections: [
+      { h: 'Try before you commit', p: `A first session with a new creative platform is about seeing whether it fits your workflow. A disposable address makes that trial low-stakes: you can look around, test an idea, and only bring in your permanent email if the tool earns a place in your toolkit.` },
+      { h: 'Fewer follow-up emails, more focus', p: `Feature announcements and tutorial series are useful inside the product and noisy in your mailbox. With a temporary inbox receiving the sign-up email, the follow-ups simply expire along with it.` },
+      { h: 'Receiving your Luma AI confirmation', p: `Open TempMailGo, copy the instant address, and use it at registration. The verification email lands in the real-time inbox within seconds. If a site does not accept the domain, generate another address and retry.` },
+    ],
+  },
+  {
+    slug: 'hailuo-ai', brand: 'Hailuo AI', category: 'AI video generation',
+    related: ['kling-ai', 'wan-ai', 'vidu'],
+    lead: `Hailuo AI has built a following among people who generate short cinematic clips, and with popularity comes promotional mail. A temporary email address is a simple way to sign up and verify your account without exposing your personal inbox to the follow-up campaigns.`,
+    sections: [
+      { h: 'Cinematic clips, minimal clutter', p: `Creators who test several video tools in a week can end up with a dozen new mailing-list subscriptions. Using a disposable inbox for each trial keeps the count in your real mailbox at zero.` },
+      { h: 'Privacy while you experiment', p: `Prompt history and generated clips are part of your creative process. Keeping the account separate from your main identity means a casual test does not leave a permanent link to your personal email address.` },
+      { h: 'How to receive your Hailuo AI code', p: `Copy a fresh TempMailGo address, paste it into the sign-up field, and wait for the verification message. Codes are highlighted in the inbox so you can copy them quickly. When the inbox expires, its contents are deleted.` },
+    ],
+  },
+  {
+    slug: 'pixverse', brand: 'PixVerse', category: 'AI video generation',
+    related: ['pika', 'hailuo-ai', 'vidu'],
+    lead: `PixVerse is a popular pick for quick, effect-heavy AI videos, and like most consumer creative apps it follows sign-ups with a steady rhythm of tips and promotions. A temporary address lets you verify your account and move on without inviting that rhythm into your daily inbox.`,
+    sections: [
+      { h: 'Effects and promotions you can ignore', p: `Consumer video apps often promote new effects, challenges, and plan offers by email. A disposable address receives your confirmation and leaves the promotional sequence with nowhere useful to go.` },
+      { h: 'A lighter footprint for a quick test', p: `If you only want to try an effect or two, there is no need to attach your primary identity to the account. A random, no-log address keeps the test lightweight and easy to walk away from.` },
+      { h: 'Verifying a PixVerse account with temp mail', p: `Use the instant address from TempMailGo at sign-up, then open the live inbox to find your confirmation email. Some services block certain disposable domains; if yours does, switch domains and try again.` },
+    ],
+  },
+  {
+    slug: 'vidu', brand: 'Vidu', category: 'AI video generation',
+    related: ['pixverse', 'hailuo-ai', 'kling-ai'],
+    lead: `Vidu is another name in the crowded AI video space, and every newcomer in that space competes for attention in your inbox. A temporary email makes it easy to try the tool, receive your verification code, and keep the marketing follow-ups at arm's length.`,
+    sections: [
+      { h: 'Compare tools without collecting newsletters', p: `Evaluating several AI video generators side by side is sensible, but each sign-up adds another sender. Disposable inboxes let you compare freely while your real mailbox stays quiet.` },
+      { h: 'Keep early work anonymous', p: `Prompts and uploads can hint at what you are building. Registering with an address that is not tied to your name or employer keeps casual testing anonymous.` },
+      { h: 'Using a temporary inbox with Vidu', p: `Grab an address from the TempMailGo homepage, paste it into the form, and wait for the confirmation to appear. It is quick, there is no password to remember, and the inbox deletes itself when it expires.` },
+    ],
+  },
+  {
+    slug: 'dreamina', brand: 'Dreamina', category: 'AI image & video creation',
+    related: ['capcut', 'midjourney', 'kling-ai'],
+    lead: `Dreamina brings AI image and video creation under one roof, which means one account can attract notifications from several product areas at once. A temporary email address lets you register and verify without handing all of those channels your personal address.`,
+    sections: [
+      { h: 'One account, many notifications', p: `Platforms that cover images, video, and editing tend to send updates for each. A disposable inbox absorbs the confirmation and lets the rest of the stream pass you by.` },
+      { h: 'Separate your trial from your real identity', p: `If you are only exploring what the platform can do, an account that is not linked to your main email is easier to leave behind and gives you more control over what the service knows about you.` },
+      { h: 'Getting your Dreamina verification email', p: `Copy the address generated on the TempMailGo homepage, use it at sign-up, and open the live inbox for the code or link. If the domain is not accepted, generate a new address and try again.` },
+    ],
+  },
+  {
+    slug: 'veo', brand: 'Veo', category: 'AI video generation',
+    related: ['sora', 'runway', 'gemini'],
+    lead: `Veo is Google's family of AI video models, and access usually runs through accounts and products that connect to the wider Google ecosystem. If you only want to explore, a temporary email keeps casual curiosity from becoming a permanent thread attached to your main identity, wherever a standard email sign-up is accepted.`,
+    sections: [
+      { h: 'Know what you are attaching', p: `Linking a new tool to an account that carries your search history, files, and contacts is a bigger step than signing up for a standalone app. For the platforms that let you register with any email address, a disposable one keeps your exploration separate.` },
+      { h: 'Not every flow accepts disposable addresses', p: `Large platforms have their own verification rules, and some require a phone number or a specific account type. TempMailGo works where a service accepts a standard email address for verification, and it is worth checking the sign-up page before you start.` },
+      { h: 'Using temp mail where it is accepted', p: `Copy the instant address, use it in the form, and check the live inbox for the confirmation. Please follow the terms of whichever service you are signing up for.` },
+    ],
+  },
+  {
+    slug: 'krea', brand: 'Krea', category: 'AI image generation',
+    related: ['midjourney', 'leonardo-ai', 'ideogram'],
+    lead: `Krea is a creative platform for generating and refining images, and creative platforms are enthusiastic about newsletters, showcases, and feature drops. A temporary email gets you through registration while keeping that enthusiasm out of the inbox you read for work.`,
+    sections: [
+      { h: 'Showcases and feature drops', p: `Inspiration emails are fun for a week and tiresome for a year. A disposable address collects the confirmation and lets the rest fade away when the inbox expires.` },
+      { h: 'Keep creative drafts private', p: `Moodboards, prompts, and reference images are often unfinished ideas. Signing up with a random, log-free address keeps those drafts detached from the email linked to your name and your clients.` },
+      { h: 'Verifying your Krea account', p: `Open TempMailGo, copy the address, and paste it into the registration form. The confirmation message shows up in the real-time inbox, with codes highlighted. If the form rejects the domain, generate another address.` },
+    ],
+  },
+  {
+    slug: 'ideogram', brand: 'Ideogram', category: 'AI image generation',
+    related: ['midjourney', 'krea', 'leonardo-ai'],
+    lead: `Ideogram is known for AI image generation that handles text inside images well, and it attracts designers, marketers, and hobbyists alike. A temporary email lets you sign up and check the tool out without adding your personal address to its mailing lists.`,
+    sections: [
+      { h: 'Designers get a lot of email already', p: `Between client threads and tool notifications, creative professionals have crowded inboxes. A disposable address for a trial keeps one more sender from joining the pile.` },
+      { h: 'Experiment without a paper trail', p: `Logos, slogans, and campaign concepts are sensitive until they launch. Testing ideas under an anonymous address keeps early work separate from your name and your employer.` },
+      { h: 'Using a disposable inbox with Ideogram', p: `Copy your TempMailGo address, use it at registration, and look for the confirmation in the live inbox. Because the inbox deletes itself, there is nothing to unsubscribe from later. Use the service under its own terms.` },
+    ],
+  },
+  {
+    slug: 'heygen', brand: 'HeyGen', category: 'AI avatar video',
+    related: ['elevenlabs', 'runway', 'canva'],
+    lead: `HeyGen creates talking-avatar videos from scripts, which makes it popular with marketers, educators, and small businesses. Business-oriented tools tend to follow sign-ups with sales and onboarding sequences, so a temporary email is a handy way to evaluate the product without opening your real inbox to them.`,
+    sections: [
+      { h: 'Skip the sales sequence', p: `Tools aimed at businesses often follow a trial with outreach and upgrade reminders. A disposable address receives the confirmation and makes the follow-ups someone else's problem.` },
+      { h: 'Keep scripts and avatars private while testing', p: `Test scripts can contain product names, pricing, or internal messaging. Using an anonymous address for early evaluation keeps that material separate from your work identity until you decide to adopt the tool.` },
+      { h: 'Verifying a HeyGen account', p: `Paste your TempMailGo address into the sign-up form and open the live inbox for the verification email. If you later choose to keep the account, switch to a permanent address you control. Follow the service's terms of use.` },
+    ],
+  },
+  {
+    slug: 'deepseek', brand: 'DeepSeek', category: 'AI assistant',
+    related: ['chatgpt', 'claude', 'qwen'],
+    lead: `DeepSeek has become a widely discussed AI assistant, and its popularity means plenty of curiosity sign-ups. If you are only kicking the tires, a temporary email keeps the account at arm's length from your real identity and your main inbox.`,
+    sections: [
+      { h: 'Curiosity should not cost you your inbox', p: `Many people try a new assistant once or twice and move on. A disposable address means a brief experiment does not turn into years of product emails.` },
+      { h: 'Think before you share', p: `Whatever tool you use, it is wise to keep personal and confidential details out of prompts. Pairing that habit with an address that is not linked to your identity adds one more layer of separation.` },
+      { h: 'Receiving your DeepSeek verification code', p: `Open TempMailGo, copy the instant address, and use it in the sign-up form. Your code arrives in the live inbox within seconds. For an account you plan to keep, use an address you control so you can recover it later.` },
+    ],
+  },
+  {
+    slug: 'qwen', brand: 'Qwen', category: 'AI assistant',
+    related: ['deepseek', 'chatgpt', 'gemini'],
+    lead: `Qwen is a family of AI models and chat tools with a growing user base, and new sign-ups usually mean a verification email followed by product news. A temporary address lets you try it out and receive that first message without committing your personal inbox.`,
+    sections: [
+      { h: 'Evaluate assistants without the follow-ups', p: `If you compare several AI assistants, each registration adds another sender. Disposable inboxes let you compare in peace.` },
+      { h: 'Keep trials anonymous', p: `An account created with a random, log-free address is not tied to your name, so a casual trial leaves little behind.` },
+      { h: 'Using temp mail with Qwen', p: `Copy a fresh address from TempMailGo, paste it into the form, and watch the live inbox for the confirmation. If the domain is refused, switch to another one and try again.` },
+    ],
+  },
+  {
+    slug: 'lovable', brand: 'Lovable', category: 'AI app builder',
+    related: ['cursor', 'chatgpt', 'claude'],
+    lead: `Lovable lets people describe an app in plain language and watch it take shape, which draws founders, designers, and hobbyists. Builder tools send a lot of product mail, and a temporary email address is a tidy way to try the platform without growing the pile in your real inbox.`,
+    sections: [
+      { h: 'Founders already get enough email', p: `If you are exploring several AI app builders, each registration brings its own onboarding series. A disposable inbox keeps your working mailbox for customers and teammates.` },
+      { h: 'Keep unreleased ideas separate', p: `Describing an app idea in detail can reveal your plans before you are ready. An anonymous trial account keeps early concepts detached from your name until you choose to commit.` },
+      { h: 'Verifying a Lovable account with temp mail', p: `Use the TempMailGo address at sign-up and find the confirmation in the live inbox. Remember that disposable inboxes expire, so for any project you intend to keep, register with a permanent address you control.` },
+    ],
+  },
+  {
+    slug: 'cursor', brand: 'Cursor', category: 'AI code editor',
+    related: ['lovable', 'chatgpt', 'claude'],
+    lead: `Cursor is an AI-powered code editor, and developers who try new tools tend to accumulate a lot of accounts. A temporary email can handle a quick evaluation while keeping product announcements and billing-style reminders out of your professional inbox.`,
+    sections: [
+      { h: 'Developers collect accounts fast', p: `Between editors, deployment platforms, and APIs, a developer's inbox fills with notices. Using a disposable address for a short evaluation keeps one more source out.` },
+      { h: 'Keep your work identity out of a trial', p: `Linking a tool to your work email can create expectations or admin involvement you did not intend. An anonymous address keeps a personal experiment personal.` },
+      { h: 'Using a temporary inbox with Cursor', p: `Copy your TempMailGo address into the sign-up form and open the live inbox for the verification message. If you decide to keep using the tool, move to a permanent address you control so you can recover the account.` },
+    ],
+  },
+  {
+    slug: 'capcut', brand: 'CapCut', category: 'Video editing',
+    related: ['dreamina', 'canva', 'adobe'],
+    lead: `CapCut is one of the most widely used video editors on phones and desktops, and its sign-up flow invites you to connect an email or a social account. A temporary email lets you create an account for a quick project while keeping promotional mail out of your main inbox.`,
+    sections: [
+      { h: 'Editing apps love promotions', p: `Template packs, effect bundles, and subscription offers are common in consumer editing apps. A disposable inbox takes the confirmation and lets the promotions expire.` },
+      { h: 'Keep your projects separate from your real identity', p: `Casual edits can include personal footage. Registering with an anonymous address means a one-off project is not tied to the email you use for everything else.` },
+      { h: 'Verifying your CapCut account', p: `Copy the TempMailGo address, use it at sign-up, and check the live inbox for the code. If an email option is not offered or the domain is refused, that is the service's rule; try another address or sign-up method.` },
+    ],
+  },
 ];
 
 module.exports = { SERVICES };
